@@ -1,0 +1,103 @@
+<template>
+	<div v-title data-title="证书查验" class="main_box">
+		<!-- 头部 -->
+		<heade :titlehead="headTitle"></heade>
+
+		<div class="main">
+			<table>
+				<tr>
+					<td class="msg_list" width="28%">证书编号</td>
+					<td class="msg_detail">{{dataMsg.certNo}}</td>
+				</tr>
+				<tr>
+					<td class="msg_list" width="28%">证书名称</td>
+					<td class="msg_detail">{{dataMsg.certName}}</td>
+				</tr>
+				<tr>
+					<td class="msg_list" width="28%">姓名</td>
+					<td class="msg_detail">{{dataMsg.realname}}</td>
+				</tr>
+				<tr>
+					<td class="msg_list">身份证</td>
+					<td class="msg_detail">{{dataMsg.cardno}}</td>
+				</tr>
+				<tr>
+					<td class="msg_list">年度</td>
+					<td class="msg_detail">{{dataMsg.year}}</td>
+				</tr>
+				<tr>
+					<td class="msg_list">类型</td>
+					<td class="msg_detail" v-show="dataMsg.certType == '0701'">继续教育公需课</td>
+					<td class="msg_detail" v-show="dataMsg.certType == '0702'">继续教育专业课</td>
+					<td class="msg_detail" v-show="dataMsg.certType == '0703'">转岗培训</td>
+					<td class="msg_detail" v-show="dataMsg.certType == '0710'">继续教育</td>
+				</tr>
+				<tr>
+					<td class="msg_list">完成学时</td>
+					<td class="msg_detail">{{dataMsg.credit}}</td>
+				</tr>
+				<tr>
+					<td class="msg_list">操作</td>
+					<td class="msg_detail"><router-link :to="{path:'zsscan',query:{id:idNum}}">查看证书</router-link></td>
+				</tr>
+			</table>
+		</div>
+
+		<!-- 底部 -->
+		<foote></foote>
+	</div>
+</template>
+<script>
+	import heade from '@/components/common/header'
+	import foote from '@/components/common/footer'
+	import axios from "axios"
+	import config from "@/api/base.js";
+	import { MessageBox } from 'mint-ui';
+	export default{
+		data(){
+			return {
+				headTitle:"证书查验",
+				dataMsg:{},
+				idNum:""                //证书标识id
+			}
+		},
+		components:{
+			heade,
+			foote
+		},
+		created(){
+			this.setHeaderBackBtn();
+			this.getData();
+		},
+		methods:{
+			getData(){
+				var _this=this;
+				_this.idNum=this.$route.query.id;
+				var params={"id":_this.idNum}
+				axios.post('/web/cert/findCertById.html',params,config)
+				.then(function(res){
+					if(res.data.result == "0")
+						_this.openAlert("错误或者无数据");
+					else
+						_this.dataMsg=res.data.cert;
+				});
+			},
+			// 设置是否显示头部返回按钮
+            setHeaderBackBtn(){
+                this.$store.commit('showHeaderBack',true);
+            },
+			// 弹框提示
+			openAlert(a) {                           
+        		MessageBox.alert(a, '提示');
+      		}
+		}
+	}
+</script>
+<style scoped>
+	.main{width:100%;color:#1E1E1E;margin-top:51px;z-index: -1;}
+	table {width:100%;border-collapse: collapse;background: #fff;}
+	table tr td{height:40px;border-bottom: 1px solid #F2F1F2}
+	.msg_list{padding-left: 3%}
+	.msg_detail{padding-right: 3%;text-align: right;color:#B6B5B5}
+	.msg_detail a{color:#78CAE2;}
+</style>

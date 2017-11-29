@@ -1,0 +1,195 @@
+<template>
+	<div v-title data-title="订单支付">
+		<!-- 头部 -->
+		<heade :titlehead="headTitle"></heade>
+		
+		<div class='main'>
+			<img src="static/images/wddd_03.png" alt="安徽继续教育网" width="100%">
+
+			<!-- 订单信息 -->
+			<div class="order_msg">
+				<div class="order_code">
+					<p>订单编号：<span>{{dataMsg.ordNo}}</span></p>
+					<p>订单金额：<span>￥{{dataMsg.ordTotalMoney}}</span></p>
+				</div>
+
+				<div class="tab_box">
+					<table v-for="msg in dataMsg.list">
+						<tr>
+							<td rowspan='2' class="img_box"><img :src="msg.classImage" alt="安徽继续教育网"></td>
+							<td border='0'><h4>{{msg.className}}</h4></td>
+						</tr>
+						<tr>
+							<td>
+								<p><!-- 专业分类: -->{{msg.codeNameParent}}({{msg.codeName}})</p>
+								<p><span>地区:{{msg.cityName}}</span><span class="right class_price">￥{{msg.price}}</span></p>
+								<p>学时:{{msg.credit}}学时</p>
+							</td>
+						</tr>
+					</table>
+				</div>
+
+				<!-- 账户或积分抵扣 -->
+				<div class="select_pay">
+					<div class="pay_count">
+						<!-- 账户金额为零 -->
+						<span v-show="dataMsg.balance == '0'" :class="dataMsg.balance == '0' ? 'hover' : '' "> 使用学习账户金额<span>0</span>元 ( 剩余金额0元 )</span>
+						<!-- 账户金额小于等于支付金额 -->
+						<span v-show="(dataMsg.balance != '0') && (dataMsg.balance <= dataMsg.ordTotalMoney) " :class=" (dataMsg.balance != '0') && (dataMsg.balance <= dataMsg.ordTotalMoney) ? 'hover' : '' "> 使用学习账户抵扣<span>{{dataMsg.balance}}</span>元 <!-- ( 剩余金额0元 ) --></span>
+						<!-- 账户金额大于支付金额 -->
+						<span v-show="(dataMsg.balance != '0') && (dataMsg.balance > dataMsg.ordTotalMoney) " :class=" (dataMsg.balance != '0') && (dataMsg.balance > dataMsg.ordTotalMoney) ? 'hover' : '' "> 使用学习账户抵扣<span>{{dataMsg.ordTotalMoney}}</span>元 <!-- ( 剩余金额{{dataMsg.balance-dataMsg.ordTotalMoney}}元 ) --></span>
+						<!-- 单选框 -->
+						<div class="rdo_box right" @click='toggleChosed' name='01'></div>
+					</div>
+					<div class="pay_grade">
+						<!-- 账户积分为零 -->
+						<span v-show=" dataMsg.surplusIntegral=='0' " :class=" dataMsg.surplusIntegral=='0' ? 'hover' : '' ">使用0积分抵用<span>0</span>元 ( 剩余{{0}}积分 )</span>
+						<!-- 账户积分小于等于支付金额 -->
+						<span v-show=" (dataMsg.surplusIntegral !='0') && (dataMsg.surplusIntegral/30 <= dataMsg.ordTotalMoney) " :class=" (dataMsg.surplusIntegral !='0') && (dataMsg.surplusIntegral/30 <= dataMsg.ordTotalMoney) ? 'hover' : '' ">使用{{dataMsg.surplusIntegral}}积分抵用<span>{{(dataMsg.surplusIntegral/30).toFixed(2)}}</span>元<!--  ( 剩余0积分 ) --></span>
+						<!-- 账户积分大于支付金额 -->
+						<span v-show=" (dataMsg.surplusIntegral !='0') && (dataMsg.surplusIntegral/30 > dataMsg.ordTotalMoney) " :class=" (dataMsg.surplusIntegral !='0') && (dataMsg.surplusIntegral/30 > dataMsg.ordTotalMoney) ? 'hover' : '' ">使用{{dataMsg.ordTotalMoney*30}}积分抵用<span>{{dataMsg.ordTotalMoney}}</span>元<!--  ( 剩余{{dataMsg.surplusIntegral-dataMsg.ordTotalMoney*30}}积分 ) --></span>
+						<!-- 单选框 -->
+						<div class="rdo_box right" @click='toggleChosed' name='02'></div>
+					</div>
+				</div>
+			</div>
+
+			<!-- 支付宝支付 -->
+			<div class="alipay">
+				<table>
+					<tr class="bank_main_way">
+						<td class="bank_img_box"><div class='zfb_logo'><img src="static/images/zfb.png" alt="安徽继续教育网" width="100%"></div></td>
+						<td class="bank_title_box" style="padding-left:5px;">支付宝支付</td>
+						<td class="rdo_box_box">
+							<!-- 单选框 -->
+							<div :class="(needPay != 0)?'rdo_box right hover':'rdo_box right hover1' "></div>
+						</td>
+					</tr>
+				</table>
+			</div>
+		</div>
+
+		<!-- 提交订单 -->
+		<div class="commit_order">
+			<p class="still_pay"><!-- 还需 -->支付:<span style="color:#EB681A">{{needPay}}元</span></p>
+			<a @click='payMoney'><button>订单支付</button></a>
+		</div>
+
+		<div id='pay_page'></div>
+	</div>
+</template>
+<script>
+	import heade from '@/components/common/header'
+	import axios from "axios";
+	import config from "@/api/base.js"; 
+	export default{
+		data(){
+			return{
+				headTitle:"订单支付",
+				dataMsg:{},
+				needPay:0,                  //还需要支付的钱
+				derateType:"00",            //减免方式        01账户减免  02积分减免
+				ordPaytype:'07',            //支付方式        01在线支付  07手机支付宝支付
+			}
+		},
+		components:{
+			heade,
+		},
+		created(){
+			this.setHeaderBackBtn();
+			this.getData();
+		},
+		methods:{
+			getData(){
+				var _this=this;
+				var params={'orderId':_this.$route.query.orderId};
+				axios.post('/order/toPayOrder.do',params,config)
+				.then(function(res){
+					_this.dataMsg=res.data;
+					_this.needPay=_this.dataMsg.ordTotalMoney;
+				});
+			},
+			// 付款
+            payMoney(){
+            	// 单独支付页面使用
+            	// this.$store.commit('setNeedPay1',this.needPay);
+            	// sessionStorage.setItem('applicationPay',this.needPay);
+            	// this.$router.push({path:'/pay',query:{'orderId':this.dataMsg.ordId,'derateType':this.derateType}});
+            	
+            	// 当前页面支付使用
+            	var _this=this;
+            	if( (_this.needPay==0)&&(_this.derateType!='00') ){
+            		var params={'orderId':_this.dataMsg.ordId,'derateType':_this.derateType};
+            	}else if( (_this.needPay==0)&&(_this.derateType=='00') ){
+            		var params={'orderId':_this.dataMsg.ordId};
+            	}else if( (_this.needPay!=0)&&(_this.derateType!='00')){
+            		var params={'orderId':_this.dataMsg.ordId,'derateType':_this.derateType,'ordPaytype':_this.ordPaytype};
+            	}else if( (_this.needPay!=0)&&(_this.derateType=='00')){
+            		var params={'orderId':_this.dataMsg.ordId,'ordPaytype':_this.ordPaytype};
+            	};
+				axios.post('/order/payEnd.do',params,config)
+				.then(function(res){
+					var dataAll=res.data.httpUrl;
+					if((_this.needPay!=0) && (res.data.result=='1')){
+						window.location.href=dataAll;
+					}else if( (_this.needPay==0) && (res.data.result=='1')){
+						_this.$router.push('/memberCenter');
+					}
+				});
+            },
+			// 设置是否显示头部返回按钮
+            setHeaderBackBtn(){
+                this.$store.commit('showHeaderBack',true);
+            },
+            // 单选框切换
+			toggleChosed(e){
+				var a=e.target || e.srcELement;
+				var b=$(a).hasClass('hover');
+				if(b){
+					$(a).removeClass('hover');
+					// 设置还需支付的价格
+					this.needPay=this.dataMsg.ordTotalMoney;
+					// 将减免方式设置为空  00为空
+					this.derateType='00';
+				}else{
+					$(a).addClass('hover').parent().siblings().children('.rdo_box').removeClass('hover');
+					this.needPay=(this.dataMsg.ordTotalMoney-($(a).siblings('span.hover').children('span').html())).toFixed(2);
+					// 设置减免方式
+					this.derateType=$(a).attr('name');
+				};
+			},
+		}
+	}
+</script>
+<style scoped>
+	.main{background:#eee;padding-bottom:50px;margin-top: 51px;}
+	.main table{border-collapse: collapse;margin-bottom: 10px;border-bottom: 1px solid #eee}
+	.main table:last-child{border-bottom: 0 !important;margin-bottom: 0 !important;}
+	
+	.order_code{background:#fff;margin-bottom: 10px;border-bottom: 1px solid #E6E6E6;padding:5px;font-size: 0.28rem}
+	.order_code span{color:#EB681A;}
+
+	.tab_box{background: #fff;padding:5px;margin-bottom: 10px;border-bottom: 1px solid #E6E6E6;border-top:1px solid #E6E6E6;}
+	.img_box{width:35%;padding-right:10px;}
+	.img_box img{width:100%;}
+	.tab_box h4{font-size: 0.28rem}
+	.class_price{color:#D1211A;position: relative;font-size: 0.28rem;top:-3px;}
+
+	.select_pay{background:#fff;padding:5px;border-bottom: 1px solid #E6E6E6;border-top:1px solid #E6E6E6;}
+	.select_pay .pay_count{border-bottom: 1px solid #eee}
+	.select_pay>div{padding:10px 0;}
+
+	.commit_order{position: fixed;bottom:0;left:0;width:100%;background:#fff;height:45px;}
+	.commit_order button{float:right;padding:0 20px;height:45px;line-height: 45px;background:#f50;color:#fff;font-size: 0.28rem;}
+	.still_pay{font-size: 0.26rem;height:22px;position: absolute;top:50%;right:110px;margin-top: -11px;}
+
+	.rdo_box{width:20px;height:20px;border:1px solid #ddd;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;}
+	.rdo_box.hover{background:url(../../../static/images/checkbox.png) no-repeat;background-size: 20px 20px;border: 0;}
+	
+	.alipay{padding:0 5px;background:#fff;margin-top: 10px;border-bottom: 1px solid #E6E6E6;border-top:1px solid #E6E6E6;}
+	.alipay table{width:100%;}
+	.alipay table td{padding:14px 0;}
+	.bank_img_box{width:25px;}
+	.zfb_logo{width:22px;height:22px;/*background:url(../../../static/images/banklogo.png) no-repeat -27px -4px;*/}
+	.rdo_box.hover1{background:url(../../../static/images/checkbox1.png) no-repeat;background-size: 20px 20px;border: 0;}
+</style>

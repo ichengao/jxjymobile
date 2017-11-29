@@ -1,0 +1,311 @@
+<template>
+	<div v-title data-title="签到">
+		<!-- 头部 -->
+		<heade :titlehead="headTitle"></heade>
+
+		<div class='main'>
+			<!-- 总计 -->
+			<div class='all_data'>
+				<p>本月已签到 <span>{{dataGet.number}}</span> 天</p>
+				<p>累计获得 <span>{{dataGet.integralval}}</span> 积分</p>
+			</div>
+
+			<!-- 签到月份 -->
+			<div class="sign_month">
+				<div class="num_box">
+					<ul class='sign_month_box' :style="'width:'+(daysNum.length*0.52+0.5)+'rem'">
+						<li v-for="(msg,idx) in dataMsg.days" class="sign_days">
+							<p class="month_now"><span :class="(msg.isToday==true)?'hover':''">{{parseInt(todayData.split('-')[1])}}月</span></p>
+							<p :class="msg.isToday?'today days':'days'">{{idx+1}}</p>
+							<p class="is_signed">
+								<span :class="(msg.isSign&&!msg.isToday)?'hover':''"></span>
+								<span :class="(msg.isSign&&msg.isToday)?'hover1':''"></span>
+							</p>
+						</li> 
+						<div class="clear"></div>
+					</ul>
+				</div>
+				<div class="sign_btn"><button v-show='!isSignIn' @click='doSign'>签到</button><button v-show='isSignIn' class="have_sign">今日已签到</button></div>
+			</div>
+			
+			<!-- 签到详情 -->
+			<div class="sign_list" v-show="dataGet.integralList.length!=0">
+				<p class="sign_list_title"><b></b><span>我的签到</span></p>
+				<table width="100%">
+					<thead>
+						<tr>
+							<td>签到日期</td>
+							<td>奖励</td>
+							<td>说明</td>
+						</tr>
+					</thead>
+					<tbody>
+						<tr v-for="msg in dataGet.integralList">
+							<td>{{msg.createtime.slice(0,10)}}</td>
+							<td>{{msg.integral}}</td>
+							<td>{{msg.describe}}</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+
+			<!-- 签到规则 -->
+			<div class="sign_rule">
+				<p class="sign_rule_title"><b></b><span>签到规则</span></p>
+				<p class="sign_rule_content">1）每天只能签到1次，同一天多次签到只算1次</p>
+				<p class="sign_rule_content">2）每月签到次数越多获取的积分越高</p>
+				<p class="sign_rule_content">3）签到次数下月清零，不跨月累计</p>
+				<p class="sign_rule_content">4）每月首次签到获10分</p>
+				<p class="sign_rule_content">5）每月签到5次再获10分，不足5次不增加积分</p>
+				<p class="sign_rule_content">6）每月签到10次再获20分 ，不足10次不增加积分</p>
+				<p class="sign_rule_content">7）每月签到20次再获50分 ，不足20次不增加积分</p>
+				<p class="sign_rule_content">8）使用APP签到积分*1.5倍</p>
+				<p class="sign_rule_content">9）不同等级会员享受不同倍率的积分，小学生1倍、中学生1.1倍、大学生1.3倍、学霸1.5倍，实际获得积分为基础积分*会员倍率</p>
+				<p class="sign_rule_content">10）积分促销活动期间，实际获得积分为基础积分*会员倍率*促销倍率，具体活动规则请见活动期间的通知</p>
+				<p class="sign_rule_content">最终解释权归本网站所有</p>
+			</div>
+		</div>
+
+	</div>
+</template>
+<script>
+	import heade from '@/components/common/header'
+	import axios from "axios"
+	import config from "@/api/base.js"
+	import {MessageBox} from 'mint-ui';
+	export default{
+		data(){
+			return{
+				headTitle:'签到',  
+				dataMsg:{},
+				dataGet:{},                     //获取到的数据
+				signDays:[],                    //已签到的当月数据
+				daysNum:[],                     //天数
+				isSignIn:false,                 //今天是否已签到
+				todayData:'',                   //今天日期
+			}
+		},
+		components:{
+			heade
+		},
+		created(){
+			this.getData();
+		},
+		mounted(){
+			this.setHeaderBackBtn();
+		},
+		updated(){
+			this.scrollToToday();
+		},
+		methods:{
+			getData(){
+				var _this=this;
+				var params={};
+				axios.post('/user/toSign.do',params,config)
+				.then(function(res){
+					_this.dataGet=res.data;
+					_this.todayData=res.data.sysdate;
+					if(_this.dataGet.result=='1'){
+						_this.daysSet(_this.todayData);
+					};
+				});
+			},
+			// 签到
+			doSign(){
+				var _this=this;
+				var params={};
+				axios.post('/user/doSign.do',params,config)
+				.then(function(res){
+					if(res.data.result == '1'){
+						// 签到成功
+						var today=_this.todayData.split('-')[2]-1;
+						_this.$set(_this.dataMsg.days[today],'isSign',true);
+						_this.isSignIn=true;
+						_this.getData();
+					}else{
+						// 签到失败
+						_this.isSignIn=false;
+						_this.openAlert('签到失败，请重试');
+					}
+				});
+			},
+			// 天数设置   当月已签到天数设置 
+			daysSet(n){
+				// 天数设置
+				var year=n.split('-')[0],month=n.split('-')[1],day=n.split('-')[2];
+				var longYear=(year/4==0)?true:false;
+				if(longYear){
+					switch(month){
+						case '01' :
+							this.daysNum.length=31;
+							break;
+						case '02' :
+							this.daysNum.length=29;
+							break;
+						case '03' :
+							this.daysNum.length=31;
+							break;
+						case '04' :
+							this.daysNum.length=30;
+							break;
+						case '05' :
+							this.daysNum.length=31;
+							break;
+						case '06' :
+							this.daysNum.length=30;
+							break;
+						case '07' :
+							this.daysNum.length=31;
+							break;
+						case '08' :
+							this.daysNum.length=31;
+							break;
+						case '09' :
+							this.daysNum.length=30;
+							break;
+						case '10' :
+							this.daysNum.length=31;
+							break;
+						case '11' :
+							this.daysNum.length=30;
+							break;
+						case '12' :
+							this.daysNum.length=31;
+							break;
+					};
+				}else{
+					switch(month){
+						case '01' :
+							this.daysNum.length=31;
+							break;
+						case '02' :
+							this.daysNum.length=28;
+							break;
+						case '03' :
+							this.daysNum.length=31;
+							break;
+						case '04' :
+							this.daysNum.length=30;
+							break;
+						case '05' :
+							this.daysNum.length=31;
+							break;
+						case '06' :
+							this.daysNum.length=30;
+							break;
+						case '07' :
+							this.daysNum.length=31;
+							break;
+						case '08' :
+							this.daysNum.length=31;
+							break;
+						case '09' :
+							this.daysNum.length=30;
+							break;
+						case '10' :
+							this.daysNum.length=31;
+							break;
+						case '11' :
+							this.daysNum.length=30;
+							break;
+						case '12' :
+							this.daysNum.length=31;
+							break;
+					};
+				};
+
+				// 当月已签到天数设置
+				var len=this.dataGet.signList.length;
+				for(var i=0;i<len;i++){
+					var hasDays=this.dataGet.signList[i].time.slice(8,10);
+					this.signDays.push(parseInt(hasDays));
+				};
+
+				this.dataSet(this.daysNum.length,day);
+			},
+			// 数据整理
+			dataSet(m,n){
+				// m 当月天数  n 当天日期
+				var todayNum=parseInt(n);
+				this.dataMsg.days=new Array();
+				for(var i=1;i<=m;i++){
+					var list=new Object();
+
+					// isToday  是否是今天
+					// isSign   是否签到过
+					if((i==todayNum) && (this.signDays.indexOf(i)!='-1') ){
+						// 今天并且签到过
+						this.isSignIn=true;
+						this.$set(list,'isToday',true);
+						this.$set(list,'isSign',true);
+						this.dataMsg.days.push(list);
+					}else if((i==todayNum) && (this.signDays.indexOf(i)=='-1')){
+						// 今天没签到过
+						this.isSignIn=false;
+						this.$set(list,'isToday',true);
+						this.$set(list,'isSign',false);
+						this.dataMsg.days.push(list);
+					}else if((i!=todayNum) && (this.signDays.indexOf(i)=='-1')){
+						// 今天之前且未签到过
+						this.$set(list,'isToday',false);
+						this.$set(list,'isSign',false);
+						this.dataMsg.days.push(list);
+					}else if((i!=todayNum) && (this.signDays.indexOf(i)!='-1')){
+						// 今天之前且签到过
+						this.$set(list,'isToday',false);
+						this.$set(list,'isSign',true);
+						this.dataMsg.days.push(list);
+					}
+				};
+			},
+			// 滚动到当天日期
+			scrollToToday(){
+				var todayNum=this.todayData.split('-')[2];
+				if(todayNum-10>0){
+					var wid=$('.today').width();
+					$(".num_box").animate({scrollLeft:(todayNum-5)*wid+'px'});
+				};
+			},
+			// 设置是否显示头部返回按钮
+	        setHeaderBackBtn(){
+	            this.$store.commit('showHeaderBack',true);
+	        },
+	        // 弹框提示 
+			openAlert(a) {                           
+        		MessageBox.alert(a,'提示');
+      		},
+		}
+	}
+</script>
+<style scoped>
+	.main{margin-top: .9rem;padding-bottom: 50px;overflow-x:hidden;width:100%;}
+	.all_data{background:#fff;padding:10px 0 10px 10px;border-bottom: 1px solid #e6e6e6;position: relative;}
+	.check_detail{position: absolute;padding:0 10px;height:30px;right:10px;top:50%;margin-top: -15px;background:#f50 !important;color:#fff;}
+	.all_data span{color:#f50 !important;}
+	.num_box{width:100%;overflow-x:scroll;}
+	.sign_month{margin-top:5px;border-top:1px solid #e6e6e6;width:100%;}
+	.sign_month_box{padding:5px;background:#fff;}
+	.sign_month_box p{color:#aaa;}
+	.month_now{min-height:0.36rem;}
+	.month_now span{font-size: 0.26rem;display: none;color:#aaa;}
+	.month_now span.hover{display: block}
+	.sign_days{width:0.52rem;float:left;text-align: center;color:#999;}
+	.days{width:0.44rem;height:0.44rem;line-height:0.44rem;margin:0 auto;}
+	.today{border-radius:50%;background:#f50 !important;color:#fff !important;}
+	.is_signed{height:0.53rem;}
+	.is_signed span{display: none}
+	.is_signed span.hover{display:block;height:0.44rem;background:url(../../../../static/images/nosign.png) no-repeat center 0.1rem;background-size: 0.3rem;-webkit-background-size: 0.3rem;-moz-background-size: 0.3rem;-o-background-size: 0.3rem;}
+	.is_signed span.hover1{/*color:#f50 !important;*/display:block;height:0.44rem;background:url(../../../../static/images/yessign.png) no-repeat center 0.1rem;background-size: 0.3rem;-webkit-background-size: 0.3rem;-moz-background-size: 0.3rem;-o-background-size: 0.3rem;}
+	.sign_btn{background:#fff;border-bottom: 1px solid #e6e6e6;text-align: center;padding:10px 0;}
+	.sign_btn button{background:#f50 !important;width:2.6rem;height:0.52rem;line-height:0.52rem;border-radius:0.26rem;-webkit-border-radius:0.26rem;-moz-border-radius:0.26rem;color:#fff;font-size: 0.32rem}
+
+	.sign_rule,.sign_list{background: #fff;margin-top: 5px;border-top: 1px solid #e6e6e6;border-bottom:1px solid #e6e6e6;padding:10px 5px;color:#53ACCC;}
+	.sign_rule_title,.sign_list_title{position: relative;margin-bottom: 5px;}
+	.sign_rule_title b,.sign_list_title b{position:absolute;left:0;top:50%;margin-top:-7.5px;width:3px;height:15px;background: #53ACCC;}
+	.sign_rule_title span,.sign_list_title span{margin-left: 7px;color:#53ACCC;font-size: 0.32rem}
+	.sign_rule_content{color:#aaa;line-height: 0.36rem;font-size: 0.3rem}
+	.sign_list tr td{text-align: center;}
+	.sign_list table{border-collapse: collapse;}
+	.sign_list table thead td{background:#ddd;color:#fff;height:30px;}
+	.sign_list table tbody td{height:30px;border-bottom: 1px solid #ddd}
+</style>

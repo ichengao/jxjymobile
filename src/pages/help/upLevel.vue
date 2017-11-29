@@ -1,0 +1,43 @@
+<template>
+	<div v-title data-title="升级规则">
+		<!-- 头部 -->
+		<heade :titlehead="headTitle"></heade>
+
+		<div class="main">
+            <h4 align="center">升级规则</h4>
+            
+            <p>会员等级从低到高依次为：小学生、中学生、大学生、学霸</p>
+            <p>会员升级的依据为会员获得的累计积分（累计积分是获得积分之和）</p>
+            <p>注册成功后默认会员等级为小学生</p>
+            <p>会员累计积分大于等于1000分为中学生</p>
+            <p>会员累计积分大于等于2000分为大学生</p>
+            <p>会员累计积分大于等于3000分为学霸</p>
+            <p>最终解释权归本网站所有</p>
+        </div>
+	</div>
+</template>
+<script>
+	import heade from '@/components/common/header'
+	export default{
+		data(){
+			return{
+				headTitle:"升级规则",
+			}
+		},
+		components:{
+			heade
+		},
+		created(){
+			this.setHeaderBackBtn();
+		},
+		methods:{
+			// 设置是否显示头部返回按钮
+            setHeaderBackBtn(){
+                this.$store.commit('showHeaderBack',true);
+            },
+		}
+	}
+</script>
+<style scoped>
+	.main{margin-top:1rem;padding:0 5px;}
+</style>

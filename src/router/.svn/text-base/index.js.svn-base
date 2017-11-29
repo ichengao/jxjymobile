@@ -1,0 +1,372 @@
+import Vue from 'vue'
+import Router from 'vue-router'
+
+Vue.use(Router)
+
+export default new Router({
+  	mode:'history',
+    scrollBehavior (to, from, savedPosition) {
+      if (savedPosition) {
+        return savedPosition
+      } else {
+        return { x: 0, y: 0 }
+      }
+    },
+  	routes: [
+      {
+        path:'/',                                          //首页
+        name:'index',
+        component:function(resolve){
+          require(["@/pages/index"],resolve);
+        }
+      },
+      {
+        path:'/register',                                   //注册
+        name:'register',
+        component:function(resolve){
+          require(["@/pages/register"],resolve);
+        }
+      },
+      {
+        path:'/login',                                      //登录
+        name:'login',
+        component:function(resolve){
+          require(["@/pages/login"],resolve);
+        }
+      },
+
+      // 个人中心模块
+      {
+        path:'/memberCenter',                               //个人中心
+        name:'grzx',
+        component:function(resolve){
+          require(["@/pages/self/grzx"],resolve);
+        }
+      },
+      {
+        path:'/wdzs',                                       //证书查验
+        name:'wdzs',
+        component:function(resolve){
+          require(["@/pages/self/wdzs/zsList"],resolve);
+        }
+      },
+      {
+        path:'/checkIn',                                    //签到
+        name:'checkIn',
+        component:function(resolve){
+          require(["@/pages/self/checkIn/checkIn"],resolve);
+        }
+      },
+      {
+        path:'/wdjf',                                       //我的积分
+        name:'wdjf',
+        component:function(resolve){
+          require(["@/pages/self/wdjf"],resolve);
+        }
+      },
+      {
+        path:'/zhgl',                                       //我的账户
+        name:'zhgl',
+        component:function(resolve){
+          require(["@/pages/self/zhgl"],resolve);
+        }
+      },
+      {
+        path:'/memberData',                                   //个人资料
+        name:'memberData',
+        component:function(resolve){
+          require(["@/pages/self/memberData/memberData"],resolve);       
+       }
+      },
+      {
+        path:'/memberDataSingle',                             //个人资料单项
+        name:'memberDataSingle',
+        component:function(resolve){
+          require(["@/pages/self/memberData/memberDataSingle"],resolve);       
+       }
+      },
+
+      //  个人中心-证书查验模块
+      {
+        path:'/zscy',                                       //证书查验
+        name:'zscy',
+        component:function(resolve){
+          require(["@/pages/zscy/zscy"],resolve);
+        }
+      },
+      {
+        path:'/zslb',                                       //证书列表
+        name:'zslb',
+        component:function(resolve){
+          require(["@/pages/zscy/zsList"],resolve);       
+        }
+      },
+      {
+        path:'/zsdetail',                                    //证书详情
+        name:'zsdetail',
+        component:function(resolve){
+          require(["@/pages/zscy/zsdetail"],resolve);       
+        }
+      },
+      {
+        path:'/zsscan',                                     //证书图文预览
+        name:'zsscan',
+        component:function(resolve){
+          require(["@/pages/zscy/zsscan"],resolve);       
+        }
+      },
+      {
+        path:'/xslb',                                       //学时证明列表
+        name:'xslb',
+        component:function(resolve){
+          require(["@/pages/zscy/xsList"],resolve);       
+        }
+      },
+      {
+        path:'/xsdetail',                                  //学时证明详情
+        name:'xsdetail',
+        component:function(resolve){
+          require(["@/pages/zscy/xsdetail"],resolve);       
+        }
+      },
+      {
+        path:'/xsscan',                                     //学时证明图文预览
+        name:'xsscan',
+        component:function(resolve){
+          require(["@/pages/zscy/xsscan"],resolve);       
+        }
+      },
+
+      // 课程学习模块
+      {
+        path:'/myClass',                                    //我的培训班
+        name:'myClass',
+        component:function(resolve){
+          require(["@/pages/study/myClass"],resolve);       
+        }
+      },
+      {
+        path:'/myCourse',                                    //我的课程
+        name:'myCourse',
+        component:function(resolve){
+          require(["@/pages/study/myCourse"],resolve);       
+        }
+      },
+      // {
+      //   path:'/onStudy',                                  //在学课程
+      //   name:'onStudy',
+      //   component:function(resolve){
+      //     require(["@/pages/study/onStudy"],resolve);       
+      //   }
+      // },
+      {
+        path:'/courseChapter',                               //课程章节
+        name:'courseChapter',
+        component:function(resolve){
+          require(["@/pages/study/courseChapter"],resolve);       
+        }
+      },
+      {
+        path:'/xsLook',                                       //学时证明
+        name:'xsLook',
+        component:function(resolve){
+          require(["@/pages/study/xsScan"],resolve);       
+        }
+      },
+      {
+        path:'/player',                                         //视频播放
+        name:'player',
+        meta: {keepAlive: false},
+        component:function(resolve){
+          require(["@/pages/study/player"],resolve);       
+        }
+      },
+
+
+      // 报名选课模块
+      {
+        path:'/chooseClass',                                    //选择班级
+        name:'chooseClass',
+        component:function(resolve){
+          require(["@/pages/signIn/chooseClass"],resolve);       
+        }
+      },
+      {
+        path:'/classDetail',                                    //班级详情
+        name:'classDetail',
+        component:function(resolve){
+          require(["@/pages/signIn/classDetail"],resolve);       
+        }
+      },
+      {
+        path:'/courseDetail',                                   //班级详情
+        name:'courseDetail',
+        component:function(resolve){
+          require(["@/pages/signIn/courseDetail"],resolve);       
+        }
+      },
+      {
+        path:'/ensureClass',                                    //确认报名班级
+        name:'ensureClass',
+        component:function(resolve){
+          require(["@/pages/signIn/ensureClass"],resolve);       
+        }
+      },
+      {
+        path:'/chooseCourse',                                  //选择学习课程
+        name:'chooseCourse',
+        component:function(resolve){
+          require(["@/pages/signIn/chooseCourse"],resolve);       
+        }
+      },
+      {
+        path:'/shoppingCart',                                   //购物车
+        name:'shoppingCart',
+        component:function(resolve){
+          require(["@/pages/signIn/myShoppingCart"],resolve);       
+        }
+      },
+      {
+        path:'/shoppingCartCourse',                              //选择查看购物车班级里课程
+        name:'shoppingCartCourse',
+        component:function(resolve){
+          require(["@/pages/signIn/shoppingCartCourse"],resolve);       
+        }
+      },
+      {
+        path:'/myOrder',                                         //订单生成
+        name:'myOrder',
+        component:function(resolve){
+          require(["@/pages/signIn/myOrder"],resolve);       
+        }
+      },
+      // {
+      //   path:'/pay',                                          //支付       暂时不用
+      //   name:'pay',
+      //   component:function(resolve){
+      //     require(["@/pages/signIn/pay"],resolve);       
+      //   }
+      // },
+      {
+        path:'/payResult',                                       //支付结果返回
+        name:'payResult',
+        component:function(resolve){
+          require(["@/pages/signIn/payResult"],resolve);       
+        }
+      },
+
+
+      // 个人中心-订单模块   
+      {
+        path:'/orderList',                                       //订单列表
+        name:'orderList',
+        component:function(resolve){
+          require(["@/pages/self/orderManage/orderList"],resolve);       
+        }
+      },
+      {
+        path:'/orderDetail',                                     //订单详情
+        name:'orderDetail',
+        component:function(resolve){
+          require(["@/pages/self/orderManage/orderDetail"],resolve);       
+        }
+      },
+      // 个人中心-发票模块
+      {
+        path:'/invoiceList',                                       //发票列表
+        name:'invoiceList',
+        component:function(resolve){
+          require(["@/pages/self/invoiceManage/invoiceList"],resolve);       
+        }
+      },
+      {
+        path:'/invoiceDetail',                                     //发票详情
+        name:'invoiceDetail',
+        component:function(resolve){
+          require(["@/pages/self/invoiceManage/invoiceDetail"],resolve);       
+        }
+      },
+
+      // 个人中心  寄送地址模块
+      {
+        path:'/jsdz',                                            //寄送地址
+        name:'jsdz',
+        component:function(resolve){
+            require(["@/pages/self/address/jsdz"],resolve);
+        }
+      },
+      {
+        path:'/xzjsdz',                                          //新增寄送地址
+        name:'xzjsdz',
+        component:function(resolve){
+            require(["@/pages/self/address/xzjsdz"],resolve);
+        }
+      },
+
+      // 新闻模块
+      {
+        path:'/notify',                                          //新闻资讯
+        name:'notify',
+        component:function(resolve){
+          require(["@/pages/news/notify"],resolve);       
+        }
+      },
+      {
+        path:'/notifyDetail',                                    //新闻资讯详情
+        name:'notifyDetail',
+        component:function(resolve){
+          require(["@/pages/news/notifyDetail"],resolve);       
+       }
+      },
+
+      // 帮助模块
+      {
+        path:'/registerProtocol',                                 //注册协议
+        name:'registerProtocol',
+        component:function(resolve){
+          require(["@/pages/help/registerProtocol"],resolve);
+        }
+      },
+      {
+        path:'/upLevel',                                            //升级规则
+        name:'upLevel',
+        component:function(resolve){
+          require(["@/pages/help/upLevel"],resolve);
+        }
+      },
+      {
+        path:'/integralRule',                                       //积分规则
+        name:'integralRule',
+        component:function(resolve){
+          require(["@/pages/help/integralRule"],resolve);
+        }
+      },
+      {
+        path:'/helpCenter',                                         //帮助中心
+        name:'helpCenter',
+        component:function(resolve){
+          require(["@/pages/help/helpCenter/bzzx"],resolve);
+        } 
+      },
+      {
+        path:'/helpType',                                           //帮助中心大类
+        name:'helpType',
+        component:function(resolve){
+          require(["@/pages/help/helpCenter/help"],resolve);
+        } 
+      },
+      {
+        path:'/helpDetail',                                         //帮助中心详情
+        name:'helpDetail',
+        component:function(resolve){
+          require(["@/pages/help/helpCenter/helpDetail"],resolve);
+        } 
+      },
+
+      {
+        path:'*',                                                 //默认指向
+        redirect:'/'                     
+      }
+  	]
+})
+

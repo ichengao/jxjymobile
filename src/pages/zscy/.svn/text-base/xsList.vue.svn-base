@@ -1,0 +1,73 @@
+<template>
+	<div v-title data-title="证书查验">
+		<!-- 头部 -->
+		<heade :titlehead="headTitle"></heade>
+
+		<div class="main">
+			<table>
+				<thead>
+					<tr>
+						<td width="75%" class="list">班级名称</td>
+						<td>操作</td>
+					</tr>
+				</thead>
+
+				<tbody>
+					<tr v-for="msg in dataMsg">
+						<td class="list"  style="color:#B8B8B8">{{msg.className}}</td>
+						<td align="center">
+							<router-link :to="{path:'/xsdetail',query:{id:msg.id}}" style="color:#59A8D3">查看</router-link>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+
+		
+		<!-- 底部 -->
+		<foote></foote>
+	</div>
+</template>
+<script>
+	import heade from '@/components/common/header'
+	import foote from '@/components/common/footer'
+	import { MessageBox } from 'mint-ui';
+	import { mapGetters } from 'vuex'
+	export default{
+		data(){
+			return{
+				headTitle:"证书查验"
+			} 
+		},
+		components:{
+			heade,
+			foote
+		},
+		created(){
+			this.setHeaderBackBtn();
+		},
+		computed:{
+			...mapGetters({
+				dataMsg:"xsData"
+			})
+		},
+		methods:{
+			// 设置是否显示头部返回按钮
+            setHeaderBackBtn(){
+                this.$store.commit('showHeaderBack',true);
+            },
+			// 弹框提示
+			openAlert(a) {                           
+        		MessageBox.alert(a, '提示');
+      		}
+		}
+	}
+</script>
+<style scoped>
+	.main{width:100%;color:#1E1E1E;margin-top:51px;z-index: -1;}
+	table{border-collapse: collapse;width:100%;background:#fff;margin-bottom: 10px;}
+	table td{height:45px;}
+	table thead td{background:#F1F1F2;text-align: center;}
+	table td.list{padding-left: 5px;}
+	table tbody td{border-bottom: 1px solid #F2F1F2}
+</style>

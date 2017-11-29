@@ -1,0 +1,154 @@
+<template>
+	<div v-title data-title="headTitle">
+		<!-- 头部 -->
+		<heade :titlehead="headTitle"></heade>
+
+		<!-- 主体 -->
+	    <div class="main">
+	        <div class="msg">
+	            <h4 class="m_title">{{dataMsg.title}}</h4>
+	            <p class="m_time">
+	            	<table width='100%'>
+	            		<tr>
+	            			<td width="50%">发布时间：{{dataMsg.publishtime}}</td>
+	            			<td>来源：{{dataMsg.publishfrom}}</td>
+	            		</tr>
+	            	</table>
+	            </p>
+	            <p class="m_content"></p>
+	        </div>
+	        <!-- 上一页，下一页 -->
+	        <div class="page_change">
+	            <table width="100%">
+	            	<tr :name="dataMsg.lasttTextName" @click='judgePage' v-show="dataMsg.lasttTextTitle!=null">
+	            		<td nowrap><span>【上一篇】</span></td>
+	            		<td>{{dataMsg.lasttTextTitle}}</td>
+	            	</tr>
+	            	<tr :name="dataMsg.nextTextName" @click='judgePage' v-show="dataMsg.nextTextTitle!=null">
+	            		<td nowrap><span>【下一篇】</span></td>
+	            		<td>{{dataMsg.nextTextTitle}}</td>
+	            	</tr>
+	            </table>
+	        </div>
+	        <!-- 相关推荐 -->
+	        <div class="news">
+	            <div class="list_top">
+	                <span class="left">相关新闻推荐<strong class="line left"></strong></span>
+	            </div>
+	            <div class="news_content">
+	                <table>
+	                    <tr v-for="msg in dataMsg3" :name="msg.name" @click='judgePage'>
+	                        <td><img src="static/images/222_03.png" alt="安徽继续教育网"></td>
+	                        <td class="news_title">{{msg.title}}</td>
+	                    </tr>
+	                </table>
+	            </div>
+	        </div>
+	    </div>
+	</div>
+</template>
+<script>
+	import heade from '@/components/common/header'
+	import axios from "axios";
+	import config from "@/api/base.js";
+	export default{
+		data(){
+			return{
+				headTitle:"详情",
+				dataMsg:{},
+				dataMsg1:{},
+				dataMsg2:{},
+				dataMsg3:{},
+				codeNo:'',                  //分类
+				name:'',                    //参数
+			}
+		},
+		components:{
+			heade,
+		},
+		created(){
+			this.getData();
+			this.setHeaderBackBtn();
+		},
+		methods:{
+			getData(){
+				var _this=this;
+				_this.codeNo=_this.$route.query.codeNo;
+				_this.name=_this.$route.query.name;
+				var params={'codeNo':_this.codeNo,'name':_this.name};
+				axios.post('/info/toInfoMessageDetail.html',params,config)
+				.then(function(res){
+					_this.dataMsg=res.data;
+
+					_this.dataMsg.publishtime=_this.dataMsg.publishtime.split(" ")[0];
+
+					// 取三条
+					_this.dataMsg3=res.data.relatedInfoMessageList;
+					var img = _this.dataMsg.infoContent.split('<img alt=""');
+					for(var i=0;i<img.length-1;i++){
+                        // 修改内容图片链接
+                        _this.dataMsg.infoContent=_this.dataMsg.infoContent.replace('src="/img_data_edit','src="'+_this.GLOBAL.imgBase+'/img_data_edit');
+                        _this.dataMsg.infoContent=_this.dataMsg.infoContent.replace('<img alt=""','<img width="100%"');
+					}
+					$('.m_content').append(_this.dataMsg.infoContent);
+					$('.m_content img').css({'maxWidth':'100%','height':'auto'});
+				});
+			},
+			// 页面跳转
+			judgePage(e){
+				var _this=this;
+				$('.m_content').html(" ");
+				var a=e.currentTarget;
+				_this.name=$(a).attr('name');
+				var params={'codeNo':_this.codeNo,'name':_this.name};
+				axios.post('/info/toInfoMessageDetail.html',params,config)
+				.then(function(res){
+					_this.dataMsg=res.data;
+
+					_this.dataMsg.publishtime=_this.dataMsg.publishtime.split(" ")[0];
+
+                    var img = _this.dataMsg.infoContent.split('<img alt=""');
+                    for(var i=0;i<img.length-1;i++){
+                        // 修改内容图片链接
+                        _this.dataMsg.infoContent=_this.dataMsg.infoContent.replace('src="/img_data_edit','src="'+_this.GLOBAL.imgBase+'/img_data_edit');
+                        _this.dataMsg.infoContent=_this.dataMsg.infoContent.replace('<img alt=""','<img width="100%"');
+                    }
+					$('.m_content').append(_this.dataMsg.infoContent);
+					$('.m_content img').css({'maxWidth':'100%','height':'auto'});
+				});
+				_this.$router.replace({path:'/helpDetail',query:{'codeNo':_this.codeNo,'name':_this.name}});
+			},
+			// 设置是否显示头部返回按钮
+			setHeaderBackBtn(){
+				this.$store.commit('showHeaderBack',true);
+			},
+		}
+	}
+</script>
+<style scoped>
+	.main{margin-top:.9rem;}
+    .msg{padding:20px 5px 10px 5px;margin:0 auto;border-top:1px solid #e6e6e6;border-bottom:1px solid #e6e6e6;background: #fff}
+    .main .m_title{text-align: center;color:#231815;font-size: 0.36rem}
+    .main .m_time{text-align: center;color:#231815;font-size: 0.9em;margin-top: 7px;font-weight:600}
+    .main .m_content{color:#858585;margin-top: 20px;font-size: 0.9em;width:100%;}
+    .m_content img{max-width: 100% !important;}
+
+    .page_change{padding:10px 5px;border-top: 1px solid #E6e6e6;border-bottom: 1px solid #E6e6e6;margin-top: 5px;background:#fff;}
+    .page_change p{padding:0 5px;font-size: 0.8rem;overflow: hidden; margin-bottom: 10px;}
+    .page_change span{float:left;width: 1.45rem;}
+    .page_change table tr td:first-child{vertical-align: top;width:1.5rem;}
+    .page_change table tr td{padding-top:5px;}
+
+    .list_top{overflow: hidden;margin-bottom: 10px;}
+    .list_top strong{color:#53ACCC;}
+    .list_top span{color:#53ACCC;font-size: 1.1em;position: relative;margin-left:7px;}
+    .list_top strong.line{width:3px;height:15px;background:#53ACCC;position: absolute;top:50%;left:-7px;margin-top:-8px;}
+    .news{padding:10px 5px;background:#fff;margin: 10px auto 50px auto;}
+    .news_content table{width:100%;border-collapse: collapse;}
+    .news_content table td{border-bottom: 1px solid #BAB9B9;font-size: 0.28rem;padding: 7px 0;}
+    .news_content table td a{outline: none;color:#231815;}
+    .news_content table tr td:first-child{width:0.4rem;}
+    .news_content table td img{margin-left: 5px;height:0.3rem;}
+    .news_content table td a:hover{color:#45AEE2;}
+    .news_content table td.news_title{padding-left: 5px;}
+</style>

@@ -1,0 +1,178 @@
+<template>
+	<div v-title data-title="确认报名班级">
+		
+		<!-- 头部 -->
+		<heade :titlehead="headTitle"></heade>
+
+		<!-- 主体 -->
+	    <div class="qrbmbj">
+	        <img src="static/images/bj_02.png" alt="安徽继续教育网" class='nav_img'>
+
+			<table width="100%" class="class_title">
+				<tr>
+                    <td white-space: nowrap width="40%" style="padding:5px 0">
+						<img :src="dataMsg.classImage" alt="安徽继续教育网" width="100%" v-show="dataMsg.classImage != null">
+						<img src="/static/images/noimg.png" alt="安徽继续教育网" width="100%" v-show="dataMsg.classImage == null">
+					</td>
+                    <td align="left" class="msg class_title_detail">{{dataMsg.className}}</td>
+                </tr>
+			</table>
+			
+	        <div class="main">
+
+	            <table width='100%'>
+	                <tr>
+	                    <td white-space: nowrap width="25%">培训方式 : </td>
+	                    <td class="msg" v-show="dataMsg.classType == '01' ">在线</td>
+	                    <td class="msg" v-show="dataMsg.classType == '02' ">面授</td>
+	                    <td class="msg" v-show="dataMsg.classType == '03' ">混合</td>
+	                </tr>
+	                <tr>
+	                    <td>所属地区 : </td>
+	                    <td class="msg">{{dataMsg.cityname}}</td>
+	                </tr>
+	                <tr>
+	                    <td>要求学时 : </td>
+	                    <td class="msg">{{dataMsg.classCredithour}}</td>
+	                </tr>
+	                <tr>
+	                    <td>专业分类 : </td>
+	                    <td class="msg">{{dataMsg.codeName}}({{dataMsg.codeName1}})</td>
+	                </tr>
+	                <tr>
+	                    <td class="bor_line">缴费方式 : </td>
+	                    <td class="msg bor_line" v-show="dataMsg.classPaytype == '01' ">在线支付</td>
+	                    <td class="msg bor_line" v-show="dataMsg.classPaytype == '02' ">线下缴费</td>
+	                </tr>
+
+	            </table>
+	            <div class='warn'>
+	            	<p v-show="dataMsg.isAskHours == '01' ">
+	            		<span>*您可以选择班级中的部分课程报名</span><br>
+	            		<span v-show="dataMsgA.isIndependentExam">*本班级包括必选的{{dataMsgA.num}}门独立考试，总计{{dataMsgA.totalCredit}}学时，{{dataMsgA.totalPrice}}元</span>
+	            	</p>
+	            	<router-link :to="{ path:'/chooseCourse',query:{'classId':dataMsg.id} }" v-show="dataMsg.codeName != '转岗培训'"><button class="continue">继续报名</button></router-link>
+	            	<a v-show="dataMsg.codeName == '转岗培训'" @click='addToCart'><button class="continue">加入购物车</button></a>
+	                <a><button class="giveUp" @click="giveUp">放弃报名</button></a>
+	            </div>
+	        </div>
+
+	        <!-- 报名须知 -->
+	        <div class="sign_in_rule">
+	        	<div class="list_top">
+            		<span class="left">班级介绍<strong class="line left"></strong></span>
+            	</div>
+            	<div>
+            		{{dataMsg.classDesc}}
+            	</div>
+	        </div>
+	        <!-- 班级介绍 -->
+	        <div class="class_introduce">
+	        	<div class="list_top">
+            		<span class="left">报名须知<strong class="line left"></strong></span>
+            	</div>
+            	<div>
+            		{{dataMsg.classDemo}}
+            	</div>
+	        </div>
+	    </div>
+
+	</div>
+</template>
+<script>
+	import heade from '@/components/common/header'
+	import axios from "axios";
+	import config from "@/api/base.js";
+	import { MessageBox } from 'mint-ui';
+	export default{
+		data(){
+			return{
+				headTitle:"确认报名班级",
+				dataMsg:{},         //班级数据
+				dataMsgA:{},		//所有数据
+			}
+		},
+		components:{
+			heade,
+		},
+		created(){
+			this.setHeaderBackBtn();
+			this.getData();
+		},
+		methods:{
+			// 设置是否显示头部返回按钮
+			setHeaderBackBtn(){
+				this.$store.commit('showHeaderBack',true);
+			},
+			getData(){
+				var _this=this;
+				var params={'classId':_this.$route.query.classId};
+				axios.post('/class/toEnterClass.do',params,config)
+				.then(function(res){
+					_this.dataMsg=res.data.tClass;
+					_this.dataMsgA=res.data;
+
+					// 数据处理，避免警告
+					_this.dataMsg.classImage=res.data.tClass.classImage;
+					_this.dataMsg.cityname=_this.dataMsg.province.cityname;
+					_this.dataMsg.codeName=_this.dataMsg.trainProject.sysCode.sysCode.codeName;
+					_this.dataMsg.codeName1=_this.dataMsg.trainProject.sysCode.codeName;
+				});
+			},
+			// 转岗培训加入购物车
+			addToCart(){
+				var _this=this;
+				var params={'classId':_this.dataMsg.id};
+				axios.post('/order/doShoppingCartZG.do',params,config)
+				.then(function(res){
+					var resu=res.data.result;
+					switch(resu){
+						case '1' :
+							_this.$router.push('/shoppingCart');
+							break;
+						case '2' :
+							_this.openAlert('您已报名该培训班，请到学习考试模块学习');
+							break;
+						case '0' :
+							_this.openAlert('操作失败，请重试！');
+							break;
+					};
+				});
+			},
+			// 放弃报名,返回上一级页面
+			giveUp(){
+				this.$router.back();
+			},
+			// 弹框提示
+			openAlert(a) {                           
+        		MessageBox.alert(a, '提示');
+      		},
+		}
+	}
+</script>
+<style scoped>
+	.qrbmbj{margin-top:.9rem;padding-bottom:50px;}
+    .qrbmbj .nav_img{width:100%;height:auto;vertical-align: top;}
+    .main{margin:0 auto 0 auto;border:0;padding:0 5px;min-height: auto !important;background:#fff;border-bottom:1px solid #B6B6B6 !important;}
+    .class_title{margin-bottom: 5px;margin-top:5px;border-bottom:1px solid #B6B6B6;background:#fff;}
+    .main table{border-collapse: collapse;}
+    .main table tr td{vertical-align: top;padding:15px 0;border-bottom: 1px solid #E6E6E6;font-size: 0.28rem}
+    .main table tr td.msg{color:#A2A2A2;}
+
+    .main .warn{position:fixed;bottom:0;left:0;width:100%;background:#fff;}
+    .msg_warn{border-bottom: 0 !important}
+    .warn{z-index: 1000}
+    .warn p{text-align: right;background:#FFFBF1;padding:10px 10px;font-size: 0.26rem}
+    .warn p span{color:#EA9F36;}
+    .main .warn button{float: right;padding:0 20px;height:45px;line-height:45px;color:#fff;font-size: 0.28rem}
+    .giveUp{background:#BCBCBC;}
+    .continue{background:#f50;}
+    .class_title_detail{font-size: 0.32rem;padding-left: 5px}
+
+	.sign_in_rule,.class_introduce{background:#fff;padding:10px 5px 10px 5px;margin-top: 5px;border-bottom:1px solid #B6B6B6;}
+	.class_introduce{margin-bottom: 60px;}
+    .list_top{overflow: hidden;margin-bottom: 5px;}
+    .list_top strong{color:#53ACCC;}
+    .list_top span{color:#53ACCC;font-size: 0.32rem;position: relative;margin-left:7px;}
+    .list_top strong.line{width:3px;height:.26rem;background:#53ACCC;position: absolute;top:50%;left:-7px;margin-top:-0.13rem;}
+</style>

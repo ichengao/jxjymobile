@@ -1,0 +1,54 @@
+<!-- 复选框 -->
+	<!-- 配合全选按钮一起使用 -->
+	<!-- 选中是value为'01'，未选中为'02' 选中有.bg_img-->
+<template>
+	<div :class="hasSelected || getCheckBoxAllStatus ? 'check_box bg_img' : 'check_box' " @click="toggleSelected" :value="hasSelected || getCheckBoxAllStatus ? '01' : '02' "></div>
+</template>
+<script>
+	export default{
+		data(){
+			return{
+				hasSelected:false          //是否确认选中
+			}
+		},
+		computed:{
+			getCheckBoxAllStatus(){
+				return this.$store.state.checkBoxAll;
+			},
+		},
+		watch:{
+			getCheckBoxAllStatus(){
+				if(this.$store.state.checkBoxAll){
+					this.hasSelected=true;
+				}else{
+					if(!this.$store.state.clickCheckBoxAll){
+						this.hasSelected=false;
+					}
+				};
+			},
+		},
+		methods:{
+			toggleSelected(){
+				this.hasSelected = (this.hasSelected || this.getCheckBoxAllStatus == true) ? false : true;
+				if(this.getCheckBoxAllStatus && !this.hasSelected){
+					this.$store.commit('setCheckBoxAll',false);
+				}else if(this.getCheckBoxAllStatus && this.hasSelected){
+					this.$store.commit('setCheckBoxAll',false);
+					this.hasSelected=false;
+				};
+				return this.hasSelected;
+			},
+			setStatus(a){
+				if(a == '01'){
+					this.hasSelected=false;
+				}else if(a == '02'){
+					this.hasSelected=true;
+				}
+			},
+		}
+	}
+</script>
+<style scoped>
+	.check_box{width:0.4rem;height:0.4rem;border:1px solid #ddd;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;display: inline-block;}
+	.check_box.bg_img{background: url(../../../../static/images/checkbox.png) no-repeat;background-size: 0.4rem 0.4rem;border:0;}
+</style>

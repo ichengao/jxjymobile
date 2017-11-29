@@ -1,0 +1,189 @@
+<template>
+	<div v-title data-title="登录" class="main_box">
+	  	<!-- 头部 -->
+		<div class="header">
+			<table width="100%">
+				<tr>
+					<td width="25%">
+						<!-- 返回按钮 -->
+				        <div class="back left" @click="backPrev">
+				            <img src="static/images/fff.png" alt="安徽继续教育网">
+				        </div>
+					</td>
+					<td width="50%" align="center">
+						<p class="title_head">登录</p>
+					</td>
+					<td width="25%" align="right">
+						<!-- 右侧首页按钮 -->
+						<div class="to_home">
+							<router-link to="/">	
+								<img src="static/images/homebg.png" alt="安徽继续教育网">
+							</router-link>
+						</div>
+					</td>
+				</tr>
+			</table>
+	    </div>
+	  	
+		<div class="main" ref="main">
+			<!-- 警告提示 -->
+			<div class="warn_box">
+				<div class="warn"></div>
+			</div>
+			<!-- logo -->
+			<div class="logo_box">
+				<div>
+					<img src="static/images/loginlogo.png" alt="安徽继续教育网" class="logo1">
+				</div>
+				<div>
+					<img src="static/images/bt.png" alt="安徽继续教育网" class="logo2">
+				</div>
+			</div>
+			<!-- 登录框 -->
+			<div class="login_box">
+				<input type="text" ref="username" class="username insert" placeholder='请输入用户名/身份证号/手机号' v-on:keyup='setLoginStatus'>
+				<input type="password" ref="pwd" class="pwd insert" placeholder='请输入密码' v-on:keyup='setLoginStatus'>
+				<p class="next_link">
+					<router-link to="/register" class="left">立即注册</router-link>
+					<!-- <router-link to="/" class="right">忘记密码？</router-link> -->
+					<div class="clear"></div>
+				</p>
+				<div class="btn_login">
+					<button :class="canDoLogin?'login hover':'login' " @click='toLogin' ><span>登</span><span>录</span></button>
+				</div>
+			</div>
+		</div>
+	</div>
+</template>
+<script>
+	import axios from "axios"
+	import config from "@/api/base.js";
+	export default {
+		data(){
+			return{
+				canDoLogin:false,
+			}
+		},
+		mounted(){
+			this.setCss();
+		},
+		methods:{
+			backPrev(){					//返回按钮
+				var redir=this.$route.query.redirect;
+				if(redir == "" || redir == null || redir == undefined ){
+					this.$router.go(-1);
+				}else{
+					this.$router.go(-2);
+				};
+	      	},
+	      	// 监听事件
+	      	setLoginStatus(){
+	      		var uname=this.$refs.username.value;
+				var pwd=this.$refs.pwd.value;
+				if(uname&&pwd){
+					this.canDoLogin=true;
+				}else{
+					this.canDoLogin=false;
+				}
+	      	},
+			// 登录
+			toLogin:function(){
+				var _this=this;
+				var uname=_this.$refs.username.value;
+				var pwd=_this.$refs.pwd.value;
+				if(!_this.canDoLogin){
+					_this.showWarnBox("账号或密码不能为空");
+				}else{
+					var params={'userName':uname,'password':pwd}
+					axios.post('/user/doLogin.do',params,config).then(function(res){
+						var data=res.data;
+						switch(data.result){
+							case "0" :
+								_this.showWarnBox("帐号或者密码不能为空");
+								break;
+							case "1" :
+								// 获取token值并存在localStorage
+								localStorage.setItem('jxjy_name',uname);
+								localStorage.setItem('jxjy_pwd',pwd);
+								localStorage.setItem('jxjy_token',data.token);
+								// 跳转到个人中心页
+								_this.loginOk();
+								break;
+							case "2" :
+								_this.showWarnBox("账号不存在");
+								break;
+							case "3" :
+								_this.showWarnBox("账号未激活");
+								break;
+							case "4" :
+								// 登录错误次数提示
+								var numLast=7-data.loginErrNum;
+								_this.showWarnBox("帐号或密码错误，每天有8次输入错误机会，你还有"+numLast+"次机会！如您忘记账号或密码，可在web登录界面点击“忘记密码”找回（账号需绑定手机号码）！");
+								break;
+							case "5" :
+								_this.showWarnBox("帐号或密码错误次数超过8次,请明日登录");
+								break;
+						}
+					})
+				}
+			},
+			// 登录成功
+			loginOk:function(a,b){
+				try{
+					// 登录后返回原页面
+					var redir=this.$route.query.redirect;
+					if(redir == "" || redir == null || redir == undefined ){
+						this.$router.replace('/memberCenter');
+					}else{
+						this.$router.replace(redir);
+					}        
+				}catch(e){
+					alert("本地储存写入错误，若为safari浏览器请关闭隐身模式浏览。");
+				};
+			},
+			// 显示提示框
+			showWarnBox(a){
+				$(".warn").html(a).slideDown();
+				var timer=setTimeout(function(){
+					$(".warn").slideUp();
+				},3000);
+			},
+			//设置高度
+			setCss(){
+				var heig=$(window).height();
+				this.$refs.main.style.height=heig+'px';
+			},
+		}
+	}
+</script>
+<style scoped>
+	.header{width:100%;height:51px;background:url(../../static/images/bj-25.jpg);position:fixed;top:0;text-align: center;z-index:10000;}
+    .header .back,.area_select{position: absolute;top:18px;left:3%;}
+    .header .title_head{line-height:51px;color:#fff;font-size: 0.36rem;}
+	.to_home{padding-right: 10px;margin-top:3px;}
+    .to_home img{height:20px;}
+
+	.main_box{background:#fff;}
+	.main{margin-top: 51px;background:#fff;}
+	.warn_box{text-align: center;min-height:0.6rem;}
+	.warn{color:#fff;display: none;padding:0.12rem 0.1rem;background:#FB6D52;font-size: 0.24rem;}
+	.logo_box{text-align: center;}
+	.logo1{width:3.2rem;margin:0.4rem auto 0 auto;}
+	.logo2{width:6.18rem;margin-top:0.35rem;}
+	.login_box{padding:0 0.54rem;}
+	.insert{width:100%;border:1px solid #e8e8e8;height:0.9rem;line-height:0.9rem;border-radius: 3px;-webkit-border-radius: 3px;-moz-border-radius: 3px;-o-border-radius: 3px;padding-left: 0.8rem;font-size: 0.3rem;}
+	.username{margin-top: 0.67rem;background: url(../../static/images/login1.png) no-repeat 0.15rem center;background-size: 0.5rem;-webkit-background-size: 0.5rem;-moz-background-size: 0.5rem;-o-background-size: 0.5rem;}
+	.pwd{margin-top: 0.5rem;background: url(../../static/images/login2.png) no-repeat 0.15rem center;background-size: 0.5rem;-webkit-background-size: 0.5rem;-moz-background-size: 0.5rem;-o-background-size: 0.5rem;}
+	input::-webkit-input-placeholder {font-size:0.3rem;}
+	input:-moz-placeholder {font-size: 0.3rem;}
+	input::-moz-placeholder {font-size: 0.3rem;}
+	input:-ms-input-placeholder {font-size: 0.3rem;}
+	.next_link{margin-top: 0.3rem;padding:0 0.1rem;}
+	.next_link a{font-size: 0.24rem;color:#1d9ed2;}
+	.btn_login{margin-top: 1.7rem;text-align: center}
+	.btn_login button{width:5.5rem;height:0.75rem;border-radius: 0.325rem;-webkit-border-radius: 0.325rem;-moz-border-radius: 0.325rem;-o-border-radius: 0.325rem;}
+	.login span:first-child{margin-right: 0.4rem;}
+	.login span{color:#fff;font-size: 0.3rem;}
+	.login{background:#abe3f4;}
+	.login.hover{background: -webkit-linear-gradient(right, #2cbbe5, #3c9ed1);background: -o-linear-gradient(right, #2cbbe5, #3c9ed1);background: linear-gradient(to left, #2cbbe5, #3c9ed1);}
+</style>

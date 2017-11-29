@@ -1,0 +1,88 @@
+<template>
+	<div v-title data-title="帮助中心">
+	    <!-- 头部 -->
+        <heade :titlehead="headTitle"></heade>
+
+		<div class="main" ref='main'>
+            <table>
+                <tr>
+                    <td class="m_img"><img src="static/images/222_03.png" alt="安徽继续教育网"></td>
+                    <td class="m_nav"><router-link :to="{path:'/helpType',query:{'codeNo':'151102'}}"><a href="#">网站功能</a></router-link></td>
+                </tr>
+                <tr>
+                    <td class="m_img"><img src="static/images/222_03.png" alt="安徽继续教育网"></td>
+                    <td class="m_nav"><router-link :to="{path:'/helpType',query:{'codeNo':'151103'}}"><a>常见问题</a></router-link></td>
+                </tr>
+                <tr>
+                    <td class="m_img"><img src="static/images/222_03.png" alt="安徽继续教育网"></td>
+                    <td class="m_nav"><router-link :to="{path:'/helpType',query:{'codeNo':'151104'}}"><a>业务流程</a></router-link></td>
+                </tr>
+                <tr>
+                    <td class="m_img"><img src="static/images/222_03.png" alt="安徽继续教育网"></td>
+                    <td class="m_nav"><router-link :to="{path:'/helpType',query:{'codeNo':'151105'}}"><a>操作手册</a></router-link></td>
+                </tr>
+                <tr>
+                    <td class="m_img"><img src="static/images/222_03.png" alt="安徽继续教育网"></td>
+                    <td class="m_nav"><router-link to="/registerProtocol"><a>注册协议</a></router-link></td>
+                </tr>
+                <tr>
+                    <td class="m_img"><img src="static/images/222_03.png" alt="安徽继续教育网"></td>
+                    <td class="m_nav"><router-link to="/upLevel"><a>会员升级</a></router-link></td>
+                </tr>
+                <tr>
+                    <td class="m_img"><img src="static/images/222_03.png" alt="安徽继续教育网"></td>
+                    <td class="m_nav"><router-link to="/integralRule"><a>积分规则</a></router-link></td>
+                </tr>
+                <tr  v-show="false">
+                    <td class="m_img"><img src="static/images/222_03.png" alt="安徽继续教育网"></td>
+                    <td class="m_nav"><a>投诉建议</a></td>
+                </tr>
+            </table>
+        </div>
+	</div>
+</template>
+<script>
+	import heade from '@/components/common/header'
+	export default{
+		data(){
+			return{
+				headTitle:"帮助中心",
+			}
+		},
+		components:{
+            heade
+        },
+		created(){
+			this.setHeaderBackBtn();
+		},
+        mounted(){
+            this.setCss();
+        },
+		methods:{
+			// 设置是否显示头部返回按钮
+            setHeaderBackBtn(){
+                this.$store.commit('showHeaderBack',true);
+            },
+            setCss(){
+                var heig=$(window).height();
+                var heig1=this.$refs.main.clientHeight;
+                if(heig > heig1){
+                    this.$refs.main.style.height=heig+'px';
+                }
+            }
+		}
+	}
+</script>
+<style scoped>
+	.header{width:100%;height:51px;background:url(../../../../static/images/bj-25.jpg) no-repeat;position:fixed;top:0;text-align: center}
+    .header .back{position: absolute;top:16px;left:3%;}
+    .header p{line-height:51px;color:#fff;font-size: 1.1em;}
+
+    .main{margin:0 auto;padding:61px 5px 0 5px;background:#fff;}
+    table{width:100%;border-collapse: collapse;}
+    table td{padding:10px 0;border-bottom: 1px solid #C8C7C7}
+    table td a{color:#7A7B7B;float: left;width:100%;}
+    table td.m_img{width:1em;padding-left: 5px}
+    table td{height:1em;vertical-align: center}
+    table td.m_nav{padding-left: 5px;}
+</style>

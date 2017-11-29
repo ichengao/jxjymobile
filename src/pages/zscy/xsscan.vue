@@ -1,0 +1,169 @@
+<template>
+	<div v-title data-title="证书查验">
+		<meta content="width=device-width,maximum-scale=1" name="viewport">
+	    <div class="centent">
+	    	<div class="ewm_box"></div>
+    		<div class="ewm">
+    			<img :src="dataMsg.ewm">
+    			<p>扫码<br />查验<br />证明</p>
+    		</div>
+    		<div class="zhaopian">
+    			<img :src="dataMsg.userphoto" alt="安徽继续教育网" v-show="dataMsg.userphoto != null">
+    			<img src="static/images/grzl_03.png" v-show="dataMsg.userphoto == null" alt="安徽继续教育网">
+			</div>
+
+   			<img style="position:absolute;top:0%; left:0%;" src="static/images/logo.png">
+
+   			<div class="bac" id="img1">
+			</div>
+	   		<table cellpadding="0" cellspacing="0" width="700" border="1" class="abbb" id="table1">
+	      		<tbody>
+			      	<tr>
+			         	<td colspan="6" class="biaot">[{{dataMsg.year}}]年度专业技术人员继续教育学时证明</td>
+			      	</tr>
+	      			<tr>
+	         			<td width="158" height="48" class="ad">班级名称</td>
+	         			<td colspan="4">{{dataMsg.className}}</td>
+	         			<td width="99" rowspan="3"></td>
+	      			</tr>
+	      			<tr>
+	         			<td height="50" class="ad">学员姓名</td>
+	         			<td width="141">{{dataMsg.realname}}</td>
+	         			<td width="120" class="ad">身份证号</td>
+	         			<td colspan="2">{{dataMsg.cardno}}</td>
+	      			</tr>
+	      			<tr>
+	         			<td height="50" class="ad">学习形式</td>
+	         			<td>网络教育</td>
+	         			<td class="ad">完成学时</td>
+	         			<td colspan="2">{{dataMsg.totalCredit}}学时</td>
+	      			</tr>
+	       			<tr>
+         				<td height="0" colspan="5" class="ad"></td>
+	      			</tr>
+	      			<tr>
+	         			<td height="49" class="ad">类别</td>
+	         			<td colspan="3" class="ad">课目</td>
+	         			<td width="97" class="ad">学时（分）</td>
+	         			<td class="ad">考核结果</td>
+	      			</tr>
+		      		<tr v-for="msg in dataMsg.list" v-show="len != 0">
+		         		<td height="49" class="ad">{{msg.codeName}}</td>
+		         		<td colspan="3" class="aleft">
+		            		{{msg.courseName}}<br>
+		         		</td>
+		         		<td>{{msg.credit}}</td>
+		         		<td>合格</td>
+		      		</tr>
+	      			<tr v-show="len == 0">
+		         		<td height="49" class="ad" colspan="6">暂无数据！</td>
+		      		</tr>
+	      
+	      			<tr>
+	         			<td height="49" class="ad">主办单位</td>
+	         			<td colspan="5">
+	            			安徽冠成教育科技有限公司
+	         			</td>
+	      			</tr>
+	      			<tr>
+	         			<td height="220" colspan="6">
+	         			</td>
+	      			</tr>
+	      		</tbody>
+	      	</table>
+	      	<div>
+	   			<p class="qian">签证单位意见（盖章）： </p>
+	   			<p class="gai">该学员已修完上述全部课程，经考核合格，准予结业。</p>
+	   			<p class="anhui" style="text-align:right;">安徽省专业技术人员继续教育基地<br>
+	     			安徽冠成教育科技有限公司
+	   			</p>
+	   			<p class="nian"><span id="time">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {{year}} 年  {{month}}  月 {{day}} 日
+	   			</span></p>
+	   			<img src="static/images/gz02.png" class="cart_img">
+			</div>
+			<div align="center" style="background:#fff">
+				<a @click="backPrev" style="height: 60px;float:left;background: #48A5CF;color: #fff;border-radius: 4px;line-height: 60px;text-align: center;width: 660px;margin:30px 0 30px 20px;font-size:36px;outline:none;text-decoration:none;">返回</a>
+				<div class="clear"></div>
+			</div>
+		</div>
+	</div>
+</template>
+<script>
+	import axios from "axios"
+	import config from "@/api/base.js";
+	import { MessageBox } from 'mint-ui';
+
+	export default{
+		data(){
+			return{
+				dataMsg:{},
+				year:'',    
+				month:'',
+				day:"",
+				len:0
+			}
+		},
+		created(){
+			var _this=this;
+			// 用户id 班级id
+			var params={"userId":_this.$route.query.userId,"classId":_this.$route.query.classId}
+			axios.post('/web/cert/findCredit.html',params,config)
+			.then(function(res){
+				_this.dataMsg=res.data;
+				_this.year=_this.dataMsg.newData.slice(0,4);
+				_this.month=_this.dataMsg.newData.slice(5,7);
+				_this.day=_this.dataMsg.newData.slice(8,10);
+				if(res.data.list.length != 0){
+					_this.len=res.data.list.length;
+				}
+			});
+		},
+		mounted(){
+			// 将背景图设置为适应证书大小
+			var t = document.getElementById("table1");
+			var m = document.getElementById("img1");
+			m.width=t.width;
+			m.height=t.offsetHeight;
+			var mh = m.height;
+			var num = Math.ceil(mh/200);
+			var html = "";
+			var hcha = 200*num-mh;
+			var cha = hcha/(num-1);
+			for(var i=0;i<=num;i++){
+				if(i==0){
+					html += '<img name="imgs" style="position:absolute; top:0px; left:0px; z-index:-999;" src="static/images/bnk.png"/>';
+				}else{
+					var top = 200*i-cha*i;
+					html += '<img name="imgs" style="position:absolute; top:'+top+'px; left:0px; z-index:-999;" src="static/images/bnk.png"/>';
+				}
+			}
+			m.innerHTML=html;
+		},
+		methods:{
+			backPrev(){					//返回按钮
+	      		this.$router.back();
+	      	}
+		}
+	} 
+</script>
+<style scoped>
+	.ewm{width:80px;height:80px;position:absolute; bottom:140px; left:30px;z-index: 1000}
+	.ewm p{position:absolute; top:20px;left:80px;width:50px;overflow: hidden;}
+	.ewm img{ position:absolute; top:10px; right:10px; width:70px; height:70px;}
+	.ewm_box{position:absolute; bottom:133px; left:19px;width:130px;height:85px;border:1px solid #bbb;}
+	.centent{ margin:0 auto; width:700px; position:relative; min-height:620px;}
+	.bac{ width:700px;  position:absolute; top:0; left:0;}
+	.cart_img{ position:absolute; bottom:155px; right:100px; z-index:-1;}
+	.zhaopian{ width:100px; height:150px; position:absolute; top:102px; right:0;}
+	.zhaopian img{ width:100px; height:150px; position:absolute;top:0; left:0;}
+	.qian{ position:absolute;bottom:275px; left:5%;}
+	.gai{ position:absolute;bottom:247px; left:10%;}
+	.anhui{ position:absolute;bottom:185px; right:5%;}
+	.nian{ position:absolute;bottom:157px; right:5%;}
+	.abbb{border-collapse:collapse; margin:0 auto; position:relative;}
+	.ad{ font-weight:900;}
+	.aleft{ text-align:left;}
+	table tr td{ text-align:center; border:1px solid #666;}
+	table tr th{ height:50px; border:1px solid #333; color:#33C; background-color:#0CF;}
+	.biaot{ font-size:24px; height:100px; font-weight:800;}
+</style>

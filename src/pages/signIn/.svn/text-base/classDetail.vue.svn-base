@@ -1,0 +1,204 @@
+<template>
+	<div v-title data-title="班级详情">
+
+		<!-- 头部 -->
+		<heade :titlehead="headTitle"></heade>
+
+		<!-- 主体 -->
+	    <div class="bjxq">
+	   	    <div class="top">
+	   	    	<div class="img_box">
+	                <table width='100%'>
+	                	<tr><td colspan="2"><h4 style="font-size:0.36rem;color:#474747;margin-bottom:3px;">{{dataMsgA.className}}</h4></td></tr>
+	                	<tr>
+	                		<td rowspan='5' width="37%"><img :src="dataMsgA.classImage" alt="安徽继续教育网" class="left" width='100%'></td>
+	                		<td class="tab_right"><p class="cou_detail1" style="margin-top:0">{{dataMsgA.class1}}({{dataMsgA.class2}})</p></td>
+	                	</tr>
+	                	<tr>
+	                		<td class="tab_right"><p class="cou_detail1">地区：{{dataMsgA.cityname}}&emsp;学时：{{dataMsgA.classCredithour}}学时</p></td>
+                		</tr>
+                		<tr>
+	                		<td class="tab_right"><p class="cou_detail1">招生人数：{{dataMsgA.classPeopleNumber}}人/<span v-show="dataMsgA.classType == '01'" style="color:#868887">在线</span><span v-show="dataMsgA.classType == '02'" style="color:#868887">面授</span><span v-show="dataMsgA.classType == '03'" style="color:#868887">混合</span></p></td>
+                		</tr>
+                		<tr>
+	                		<td class="tab_right">
+	                			<p class="cou_detail2 left">￥{{dataMsgA.classPrice}}&emsp;</p>
+								<p class="left give_integral" v-show="dataMsgA.giveIntegral != '0' ">额外赠送{{dataMsgA.giveIntegral}}积分</p>
+                			</td>
+                		</tr>
+                		<tr>
+	                		<td class="tab_right">
+	                			<div class="btn_group">
+	                				<!-- 查看评价 -->
+			                		<!-- <a href="#" v-show='dataMsgA.isEva == "02" '><img src="static/images/btn_06.png" alt="安徽继续教育网"></a> -->
+			                		<!-- 购买 -->
+			                		<router-link :to="{path:'/ensureClass',query:{'classId':dataMsgA.id}}" v-show=" (dataMsgA.classEnrolStatus == '02') && (dataMsgA.timeFlag == '02') && ( dataMsgA.classPeopleNumber-dataMsgA.classEnrolNumber>0 ) "><img src="static/images/btn_08.png" alt="安徽继续教育网"></router-link>
+			                	</div>
+                			</td>
+                		</tr>
+	                </table>
+	   	    	</div>
+	            <div class="clear"></div>
+	   	    	<div class="cou_intro">
+	   	    		<p>课程总数：{{dataMsgB.length}}门</p>
+	   	    		<p>授课老师：{{dataMsgA.teachers}}</p>
+	   	    		<p>报名时间：{{dataMsgA.classEnrolStarttime}}——{{dataMsgA.classEnrolEndtime}}</p>
+	   	    		<p>上课时间：{{dataMsgA.classStarttime}}——{{dataMsgA.classEndtime}}</p>
+	   	    	</div>
+	   	    </div>
+
+	   	    <div class="main">
+	            <!-- 班级介绍、报名须知 -->
+	   	    	<div class="know_box">
+	   	    		<div class="know">
+	   	    			<ul>
+	   	    			    <li :class="toggleIntroduce ? 'hover left' : 'left' " @click="toggleIntroduce = true">班级介绍</li>
+	   	    			    <li class="line_cut"></li>
+	   	    			    <li :class="!toggleIntroduce ? 'hover left' : 'left' " @click="toggleIntroduce = false">报名须知</li>
+	   	    		    </ul>
+	                    <div class="clear"></div>
+	   	    		    <p v-show="toggleIntroduce">{{dataMsgA.classDesc}}</p>
+	   	    		    <p v-show="!toggleIntroduce">{{dataMsgA.classDemo}}</p>
+	   	    		</div>
+	   	    		
+	   	    	</div>
+	             
+
+	            <!-- 课程列表 -->
+	            <div class="cou_list" v-show="dataMsgB.length != 0">
+	            	<div class="list_top">
+	            		<span class="left">课程列表<strong class="line left"></strong></span>
+	            	</div>
+
+	            	<div class="list_box">
+	            		<ul id="course">
+	            			<li class="class_list" v-for='msgB in dataMsgB'>
+	            				<router-link :to="{path:'/courseDetail',query:{'classNo':dataMsgA.classNo,'courseNo':msgB.resCourse.cno}}">
+		            				<table>
+		            					<tr>
+		            						<td colspan='2'><h4>{{msgB.resCourse.cname}}</h4></td>
+	            						</tr>
+	            						<tr>
+	            							<td rowspan='4' width='25%' class="course_img_box"><img :src="msgB.resCourse.cimage" alt="安徽继续教育网" width='100%' v-show="msgB.resCourse.cimage!=null"><img src="static/images/noimg.png" alt="安徽继续教育网" width='100%' v-show="msgB.resCourse.cimage==null"></td>
+	            							<td class="tab_right">
+	            								<p class="cou_line left" v-show="msgB.resCourse.isExam  == '01' ">是否考试：否</p><p class="cou_line left" v-show="msgB.resCourse.isExam  == '02' ">是否考试:是</p>
+	            							</td>
+	            						</tr>
+										<tr>
+											<td class="tab_right">
+												<p class="cou_line left" v-show='msgB.resCourse.cmode == "01" '>培训方式:在线</p><p class="cou_line left" v-show='msgB.resCourse.cmode == "02"'>培训方式:面授</p><p class="cou_line left" v-show='msgB.resCourse.cmode == "03"'>培训方式:混合</p>
+											</td>
+										</tr>
+										<tr>
+											<td class="tab_right"><p class="t_box cou_line"><span class="cou_teacher">授课老师:{{msgB.resCourse.sysTeacher.realname}}</span><strong class="price">￥{{msgB.resCourse.cprice}}</strong></p></td>
+										</tr>
+										<tr>
+											<td class="tab_right">
+												<div class="study_time_box">
+		            								<span class="study_time">{{msgB.resCourse.ccredithour}}学时</span>
+												</div>
+	            							</td>
+										</tr>
+		            				</table>
+		            			</router-link>
+	            			</li>
+	            		</ul>
+
+	            	</div>
+	            </div>
+	   	    </div>
+	    </div>
+
+	    <!-- 底部 -->
+		<foote></foote>
+	</div>
+</template>
+<script>
+	import heade from '@/components/common/header'
+	import foote from '@/components/common/footer'
+	import axios from "axios";
+	import config from "@/api/base.js";
+	export default{
+		data(){
+			return{
+				headTitle:"班级详情",
+				toggleIntroduce:true,          //班级介绍和报名须知切换
+				dataMsgA:{},
+				dataMsgB:{},
+				dataMsgC:{},
+			}
+		},
+		components:{
+			heade,
+			foote
+		},
+		created(){
+			this.setHeaderBackBtn();
+			this.getData();
+		},
+		methods:{
+			// 设置是否显示头部返回按钮
+			setHeaderBackBtn(){
+				this.$store.commit('showHeaderBack',true);
+			},
+			getData(){
+				var _this=this;
+				var params={'classNo':_this.$route.query.classNo};
+				axios.post('/class/toClassDetail.html',params,config)
+				.then(function(res){
+					_this.dataMsgA=res.data.tClass;
+					_this.dataMsgB=res.data.classCourseList;
+					_this.dataMsgC=res.data.tClass.province;
+
+					_this.dataMsgA.classEnrolStarttime=_this.dataMsgA.classEnrolStarttime.slice(0,11);
+					_this.dataMsgA.classEnrolEndtime=_this.dataMsgA.classEnrolEndtime.slice(0,11);
+					_this.dataMsgA.classStarttime=_this.dataMsgA.classStarttime.slice(0,11);
+					_this.dataMsgA.classEndtime=_this.dataMsgA.classEndtime.slice(0,11);
+					_this.dataMsgA.class1=_this.dataMsgA.trainProject.sysCode.sysCode.codeName;
+					_this.dataMsgA.class2=_this.dataMsgA.trainProject.sysCode.codeName;
+					_this.dataMsgA.cityname=_this.dataMsgA.province.cityname;
+
+				});
+			},
+		}
+	}
+</script>
+<style scoped>
+	.bjxq{margin-top:51px;padding-top:5px;background:#eee;}
+	.top{padding:10px 5px 0 5px;background:#fff;border-top:1px solid #e6e6e6;border-bottom:1px solid #e6e6e6;}
+	.give_integral{color:#C1272D;font-size: 0.28rem;}
+	.cou_img{width:37%;}
+	.cou_detail11{color:#474747;font-size: 0.28rem}
+	.cou_detail1{color:#868887;font-size: 0.28rem}
+	.btn_group img{width:30%;}
+	.cou_detail2{color:#C1272D;font-size: 0.28rem}
+	.cou_intro{margin-top:12px;padding-bottom:12px;}
+    .cou_intro p{color:#868887;font-size: 0.28rem;line-height:0.32rem;}
+    .cou_title{font-size: 1.1rem}
+    .tab_right{padding-left: 5px;}
+    .tab_top{padding-bottom:5px;}
+    .cou_line{font-size: 0.28rem;color: #868887;margin-top: 2px;}
+    .cou_teacher{font-size: 0.28rem;color: #868887;margin-top: 2px;}
+    .t_box{position:relative;}
+    .class_list li h4{font-size: 0.32rem}
+    .price{position: absolute;right:0;top:-3px;font-size: 0.32rem;color: #D4412A;}
+    .study_time{color: #868887;font-size: 0.28rem}
+    .study_time_box{margin-top:2px;background:url(../../../static/images/sjz_03.png) no-repeat 1px center;padding-left: 0.38rem;padding-top:0.02rem;background-size: 0.28rem !important;-webkit-background-size: 0.28rem !important;-moz-background-size: 0.28rem !important;-o-background-size: 0.28rem !important;height:0.28rem;line-height:0.28rem;}
+    .course_img_box{vertical-align: middle;}
+
+    .main{padding:5px 0 14px 0;}
+    .know_box{border-top: 1px solid #E6E6E6;border-bottom: 1px solid #E6E6E6;background:#fff;padding-top: 5px;}
+    .know{padding-left: 5px;padding-bottom:10px;}
+    .know ul li{padding:4px 6px;position: relative;border-bottom: 1px solid #fff;font-size: 0.30rem}
+    .know ul li.hover{color:#53ACCC;border-bottom-color: #54ADCB}
+    .know ul li.line_cut{height:15px;width:0;border-left:2px solid #EFEFEF;float:left;margin:8px 5px 0 5px;padding:0;}
+    .know p{margin-top:10px;padding-right: 5px;color:#868887;font-size: 0.28rem;line-height:0.32rem;}
+    .cou_list{padding:10px 5px 10px 5px;margin-top:5px;background:#fff;border-top: 1px solid #E6E6E6;border-bottom: 1px solid #E6E6E6;}
+    .list_top{overflow: hidden;}
+    .list_top strong{color:#53ACCC;}
+    .list_top span{color:#53ACCC;font-size: 0.32rem;position: relative;margin-left:7px;}
+    .list_top strong.line{width:3px;height:15px;background:#53ACCC;position: absolute;top:50%;left:-7px;margin-top:-8px;}
+
+    .list_box ul{width:100%;padding:0 1%;}
+    .list_box li{padding:5px 3px;border:1px solid #EEEEEE;border-radius:5px;-o-border-radius:5px;-webkit-border-radius:5px;-moz-border-radius:5px;border-bottom: 2px solid #5FB2D2;margin-top:10px;overflow: hidden}
+</style>

@@ -1,0 +1,250 @@
+<template>
+	<div v-title data-title="新增收件地址">
+		<!-- 头部 -->
+		<heade :titlehead="headTitle"></heade>
+        <div class="gljsdz">
+            <div class="main">
+                 <table cellspacing='0'>
+                     <tr>
+                         <td width="20%">姓&emsp;&emsp;名</td>
+                         <td width="80%"><input type="text" autocomplete="false" class="uname" ref="uname" ></td>
+                     </tr>
+                     <tr>
+                         <td width="20%">手机号码</td>
+                         <td width="80%"><input type="text" autocomplete="false" class="phone" ref="phone" v-on:blur="phoneva"></td>
+                     </tr>
+                     <tr>
+                        <td width="20%">所在地区</td>
+                        <td width="80%">
+                            <input type="text" id="txt_area" class="area" v-on:focus="areaShow" v-model='areaMsg' readonly ref="area">
+                        </td>
+                     </tr>
+                     <tr>
+                         <td width="20%">详细地址</td>
+                         <td width="80%"><input type="text" autocomplete="false" class="address" ref="address"></td>
+                     </tr>
+                     <tr>
+                         <td width="20%">邮政编码</td>
+                         <td width="80%"><input type="text" autocomplete="false" class="code" ref="code" v-on:blur="codeva"></td>
+                     </tr>
+                     <tr>
+                         <td colspan='2'>
+                            <checkBox ref="cbadd" value="01"  class="left"></checkBox>
+                            <input type="hidden" value="01"/><span class="left" style="height:20px;line-height:20px;margin-left:3px;padding-top:0.03rem">设置为默认收件地址</span>
+                         </td>
+                     </tr>
+
+                 </table>
+                 <div class="add_btn">
+                     <a @click="save">保存</a>
+                 </div>
+            </div>
+        </div>
+        <addressselect :child-msg="msg" v-on:colseArea="areaClose" v-on:showAreaToParent="showAreaView"></addressselect>
+    </div>
+</template>
+<script>
+    import	addressselect from '@/components/common/addressSelect'  //地址选择
+    import	checkBox from '@/components/common/checkbox/checkBox'  //默认地址
+    import heade from '@/components/common/header'
+    import axios from "axios"
+    import { MessageBox } from 'mint-ui';
+    import config from "@/api/base.js";
+    	export default{
+    		data(){
+    			return{
+                    nameTh:false,                       //用户名是否通过校验
+                    phoneTh:false,                      //手机号码是否通过校验
+                    areaTh:false,                       //所在地区是否通过校验
+                    addressTh:false,                    //详细地址是否通过校验
+                    codeTh:false,                       //邮编是否通过校验
+    			    areaMsg:'',                         //选择的区域信息
+                    areal:'',
+                    areaCode:'',
+    			    msg:false,							//地址选择组件显示隐藏
+    				headTitle:"新增收件地址",
+    			}
+    		},
+    		created(){
+    			this.setHeaderBackBtn();
+    			this.getData();
+    		},
+    		components:{
+    			heade,
+    			addressselect,
+    			checkBox
+    		},
+    		methods:{
+    		    save(){
+    		        var _this=this;
+                    var name=_this.$refs.uname.value;
+                    // 判断姓名是否输入
+                    _this.nameTh=(name == "")?false:true;
+                    //手机号码
+                    _this.phoneTh=(_this.$refs.phone.value == "")?false:true;
+                    //所在地区
+                    _this.areaTh=(_this.$refs.area.value == "")?false:true;
+                    //详细地址
+                     _this.addressTh=(_this.$refs.address.value == "")?false:true;
+                    //邮编
+                    _this.codeTh=(_this.$refs.code.value == "")?false:true;
+                    _this.prov1();
+                    _this.prov2();
+                    // 所有信息是否录入
+                    var test=_this.nameTh&&_this.phoneTh&&_this.areaTh&&_this.addressTh&&_this.codeTh;
+
+                    var userName=_this.$refs.uname.value,
+                    mobile=_this.$refs.phone.value,
+                    area=_this.$store.state.addrNum,
+                    address=_this.$refs.address.value,
+                    addressId = _this.$route.query.addId,
+                    cbadd = _this.$refs.cbadd.hasSelected,
+                    isDefault = '',
+                    code=_this.$refs.code.value;
+                    if(cbadd){
+                        isDefault = '02';
+                    } else {
+                        isDefault = '01';
+                    }
+                    if(userName == "")
+                        _this.openAlert("请填写收件人姓名!");
+                    else if(mobile == "")
+                        _this.openAlert("请填写联系方式!");
+                    else if(area == ""){
+                        if(addressId == ""){
+                            _this.openAlert("请选择所在区域!");
+                        } else {
+                            area = _this.areaCode;
+                        }
+                    }
+                    else if(address == "")
+                        _this.openAlert("请填写详细地址!");
+                    else if(code == "")
+                        _this.openAlert("请填写邮政编码!");
+
+                   if(test){
+                        var params={"userName":userName,"mobile":mobile,"area":area,"address":address,"code":code,"addressId":addressId,"isDefault":isDefault};
+                        axios.post('/user/saveAddress.do',params,config)
+                        .then(function(res){
+                            var ret=res.data.result;
+                            switch(ret){
+                                case "1":
+                                    // 保存成功，跳到jsdz
+                                    _this.$router.push('/jsdz');
+                                    break;
+                            }
+                        });
+                    }
+    		    },
+                prov1(){
+                    var a=this.$refs.phone.value;
+                    var reg=/0?(13|14|15|18|17|16)[0-9]{9}$/;
+                    if(a == ""){
+                        this.phoneTh=false;
+                        this.openAlert("请填写联系方式!");
+                    }else if(a != ""){
+                        if(!reg.test(a)){
+                            // 不为空且不符合规则，将输入的数据清空
+                            this.openAlert("手机号码不符合规则");
+                            this.$refs.phone.value="";
+                            this.phoneTh=false;
+                        }
+                    }
+                },
+                prov2(){
+                    var a=this.$refs.code.value;
+                    var reg=/[1-9]\d{5}(?!\d)/;
+                    if(a == ""){
+                        this.codeTh=false;
+                        this.openAlert("请填写邮政编码!");
+                    }else if(a != ""){
+                        if(!reg.test(a)||a.length!=6){
+                            // 不为空且不符合规则，将输入的数据清空
+                            this.openAlert("邮政编码不符合规则");
+                            this.$refs.code.value="";
+                            this.codeTh=false;
+                        }
+                    }
+                },
+                // 手机号码校验
+                phoneva:function(){
+                    this.prov1();
+                },
+                // 邮编校验
+                codeva:function(){
+                   this.prov2();
+                },
+    		    getData(){
+    		        var _this=this;
+    		        _this.$store.state.addrNum="";
+                    var addressId = _this.$route.query.addId;
+                    if(addressId != "" && addressId != undefined){
+                        var params={"addressId":addressId};
+                        axios.post('/user/toEdit.do',params,config)
+                        .then(function(res){
+                            _this.data=res.data.userAddress;
+                            _this.$refs.uname.value=_this.data.name;
+                            _this.$refs.phone.value=_this.data.phone;
+                            _this.$refs.area.value=_this.data.provinceCity;
+                            _this.$refs.address.value=_this.data.address;
+                            _this.$refs.code.value=_this.data.postcode;
+                            _this.areal=_this.data.provinceCity;
+                            _this.areaCode=_this.data.area;
+                            _this.$refs.cbadd.setStatus(_this.data.isDefault);
+                        });
+                    }
+                    // 页面数据
+                    // pages为空或者没有就是第一页，pageSize为空或者没有就是一页10条数据
+                },
+    			// 设置是否显示头部返回按钮
+    			setHeaderBackBtn(){
+    				this.$store.commit('showHeaderBack',true);
+    			},
+                // 显示选择的地区信息
+                showAreaView:function(data){
+                    // 如果后两项相同则后一项不显示
+                    this.areaMsg=(data.city == data.district)?data.provice+' '+data.city:data.provice+' '+data.city+' '+data.district;
+                },
+                // 关闭地区选择弹框
+                areaClose:function(data){
+                    // 如果后两项相同则后一项不显示
+                    var addressId = this.$route.query.addId;
+                    var area=this.areaMsg;
+                    if(addressId!="" && addressId != undefined && area==""){
+                        this.$store.state.addrNum="";
+                        this.areaMsg=this.areal;
+                        this.msg=false;
+                    }else {
+                        this.msg=data;
+                    }
+                },
+                // 地区选择显示隐藏
+                areaShow:function(){
+                    this.msg=true;
+                },
+                // 弹框提示
+                openAlert(a) {
+                    MessageBox.alert(a,'提示');
+                }
+    		}
+    	}
+</script>
+<style scoped>
+    .header .back{position: absolute;top:16px;left:3%;}
+    .header p{line-height:51px;color:#fff;font-size: 1.1em;}
+    .header .list{position: absolute;right:3%;width:10%;top:18px;}
+    .main{margin:0 auto;padding-bottom: 200px;background:#eee;}
+    .gljsdz{margin-top:51px;}
+    .main table{width:100%;padding:0 5px;background:#fff;}
+    .main table tr td{height:40px;border-bottom: 1px solid #EDECEC}
+    .main table tr td input[type=text]{border:0;height:35px;text-align: right;width:95%;color:#797B7B;}
+    .delete_addr span{color:#C26666;}
+    .main table tr td.delete_addr{border:0;}
+    .reg_msg li{border-bottom:1px solid #F0F0F1;width:245px;padding:13px 0 10px 5px;}
+    .reg_msg li input{border:0;width:90%;height:25px;}
+    .reg_msg li input.getCode{width:50%;background:#fff;outline: none;color:#626463;}
+    .reg_msg li input.code{width:50%;}
+    .reg_msg li .warn{font-size: 0.8rem;color:#46A3CF;}
+    .add_btn{margin-top:50px;}
+    .add_btn a{float:left;width:100%;height:40px;line-height:40px;text-align: center;color:#fff;background:#53ABCD;border-radius: 5px;-moz-border-radius: 5px;-o-border-radius: 5px;-webkit-border-radius: 5px;}
+</style>

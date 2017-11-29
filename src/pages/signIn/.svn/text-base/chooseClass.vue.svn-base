@@ -1,0 +1,413 @@
+<template>
+	<div v-title data-title="选择报名班级">
+		<!-- 头部 -->
+		<heade :titlehead="headTitle" v-bind:change="getData"></heade>
+
+		<div class="top_fix">
+			<!-- 流程图 -->
+			<img src="static/images/lct_02.png" alt="安徽继续教育网" width="100%" style="position:relative;border:0" >
+
+			<!-- 筛选框 -->
+			<div class="z_index_box">
+				<!-- 搜索 -->
+		        <div class="ss">
+		            <div class="ss01">
+		                <input id="text" type="text" placeholder="课程名称/年份" autocomplete="false" ref='searchBox' v-on:focus="isShowNavBottom=false" v-on:blur="isShowNavBottom=true"/>
+		                <p @click='searchBtn'>搜索</p>
+		            </div>
+		        </div>
+
+				<!-- 筛选框 -->
+				<div class="choose_idea">
+					<table width="100%" class="choose_idea_box">
+						<tr>
+							<td @click='clickMajor' v-for='typeMsg in getTypeData' :name="typeMsg.codeNo">
+								<p>
+									<span>{{typeMsg.codeName.replace('继续教育','')}}</span><span class="arrow_logo arrow_top">︿</span><span class="arrow_logo hover arrow_down">﹀</span>
+								</p>
+							</td>
+						</tr>
+					</table>
+					<!-- 专业选择框 -->
+					<div class="major_list">
+						<ul class="chosedMajor">
+							<li @click='majorToggle' v-for='majorData in getMajorData' :name='majorData.codeNo'>{{majorData.codeName}}</li>
+							
+							<div class="clear"></div>
+						</ul>
+						<div class="clear"></div>
+						<div class="btn_box1" @click='hideMajorBox'>
+							<img src="static/images/sq.png" alt="安徽继续教育网">
+						</div>
+					</div>
+				</div>
+			</div>
+			<!-- 透明背景 -->
+			<div class="bg_opacity" @click='opacityClick'></div>
+		</div>
+
+		<div class="jxjyw">
+	        <!-- 课程 -->
+	        <div class="course">
+	          	<ul id="course_box" v-show="isHaveData">
+	            	<li class="class_list" v-for="msg in dataMsg">
+	            		<router-link :to="{path:'/classDetail',query:{'classNo':msg.classNo}} " >
+		            		<table>
+		            			<tr>
+		            				<td colspan='2'><h4 class="course_title">{{msg.className}}</h4></td>
+		            			</tr>
+		            			<tr>
+		            				<td rowspan='4' width='25%' vertical-align="middle"><img :src="msg.classImage" alt="安徽继续教育网" width="100%"></td>
+		            				<td style="padding-left:5px;">
+		            					<p>{{msg.trainProject.sysCode.sysCode.codeName}}({{msg.trainProject.sysCode.codeName}})
+		            					</p>
+	            					</td>
+		            			</tr>
+		            			<tr>
+		            				<td style="position:relative;padding-left:5px;">
+		            					<span style="color:#939192;font-size:0.28rem" v-show="msg.classType == '01' ">在线</span><span style="color:#939192;font-size:0.28rem" v-show="msg.classType == '02' ">面授</span><span style="color:#939192;font-size:0.28rem" v-show="msg.classType == '03' ">混合</span><span style="color:#939192;font-size:0.28rem">/{{msg.province.cityname}}</span>
+
+		            					<div class="extra_free" v-show="msg.giveIntegral != '0' ">
+		            						<span>额外赠送{{msg.giveIntegral}}积分</span>
+		            						<div class="top_trangle"></div>
+		            						<div class="bottom_trangle"></div>
+		            					</div>
+		            				</td>
+		            			</tr>
+		            			<tr>
+		            				<td style="padding-left:5px;">
+		            					<p class="t_box"><span>授课老师:{{msg.teachers.split(" ")[0]}}</span><strong class="price">￥{{msg.classPrice}}</strong></p>
+	            					</td>
+		            			</tr>
+		            			<tr>
+		            				<td style="padding-left:5px;vertical-align:middle">
+		            					<div class="left study_time">
+			                    			<!-- <img src="" alt="安徽继续教育网" class="left"> -->
+			                    			<span class="left">{{msg.classCredithour}}学时</span>
+			                  			</div>
+		            				</td>
+		            			</tr>
+		            		</table>
+	            		</router-link>
+
+	            		<div class="btm_box">
+	            			<div class="left warn_text" v-show="(msg.classEnrolStatus == '02' ) && (msg.classPeopleNumber-msg.classEnrolNumber>0) && (msg.timeFlag == '02' )">
+	            				*报名前请仔细阅读报名须知和班级介绍
+	            			</div>
+	            			<div class="right btn_box">
+	              				<!-- 评价按钮 -->   
+	              				<!-- <a href="#" class="judge" v-show="msg.isEva"><img src="static/images/xk_03.png" alt="安徽继续教育网" width="65"></a> -->
+	              				<!-- 购买按钮 -->
+	                			<router-link :to="{ path:'/ensureClass',query:{'classId':msg.id} }" class="parches" v-show="(msg.classEnrolStatus == '02' ) && (msg.classPeopleNumber-msg.classEnrolNumber>0) && (msg.timeFlag == '02' )"><img src="static/images/xk_05.png" alt="安徽继续教育网" width="65"></router-link>
+	              			</div>
+	              			<div class="clear"></div>
+	            		</div>
+	            		
+	            	</li>
+	          	</ul>
+	          	<!-- 提示 -->
+	          	<!-- <div align="center">下拉加载更多</div>
+	          	<div align="center">已加载完</div> -->
+	        </div>
+        </div>
+		
+		<div v-show="canGetData&&isHaveData&&firstGetData" class='load_more'>数据已加载完！</div>
+        <div v-show="(!canGetData)&&isHaveData&&firstGetData" class='load_more'>上拉加载更多</div>
+        <div v-show="!isHaveData&&firstGetData" class='load_more'>暂无数据！</div>
+
+		<!-- 底部导航 -->
+		<navBottom v-show='isShowNavBottom'></navBottom>
+
+        <!-- 底部 -->
+		<foote></foote>
+	</div>
+</template>
+<script>
+	import heade from '@/components/common/header'
+	import foote from '@/components/common/footer'
+	import navBottom from '@/components/common/navBottom'
+	import { Indicator } from 'mint-ui';
+	import axios from "axios";
+	import config from "@/api/base.js"; 
+	export default{
+		data(){
+			return{
+				headTitle:"选课中心",
+				dataMsg:[],
+				isHaveData:true,                 //是否有数据
+				isShowNavBottom:true,            //是否显示底部导航
+				codeNo:'',                       //分类编号
+				majorNo:'',                      //专业编号
+				area:'',                         //地区编号
+				className:'',                    //班级名称
+				pages:1,                         //当前页码
+				pageSize:5,                      //每页多少条
+				canGetData:true,                 //能否加载数据
+				getTypeData:{},                  //分类数据
+				getMajorData:{},                 //专业数据
+				beforeLeave:true,                //页面滚动加载数据开关
+				isFirstToPage:true,              //是否是刚进入页面
+				allMajorData:[],                 //已获取到的专业数据
+				firstGetData:false,              //是否是第一次加载数据 
+			}
+		},
+		components:{
+			heade,
+			foote,
+			navBottom
+		},
+		created(){
+			this.setHeaderBackBtn();
+			this.setNavBottom();
+			this.getData();
+		},
+		mounted(){
+			this.scrollData();
+			this.getType();
+		},
+		computed:{
+			getChangeArea(){
+				return this.$store.state.chooseCity;
+			}
+		},
+		watch:{
+			// 动态监控所选城市值的变化
+			getChangeArea(newValue, oldValue){
+				this.majorNo='';
+				this.getData();
+				document.body.scrollTop=0;
+			}
+		},
+		methods:{
+			getData(){
+				var _this=this;
+
+				_this.canGetData=false;
+				_this.openIndicatorWithText('open');
+				_this.pages=1;
+
+				var jxjyCity=sessionStorage.getItem('jxjySetChooseCity');
+
+				if(_this.isFirstToPage && (_this.$route.query.codeNo != undefined)){
+					// 若第一次进入且有codeNo参数
+					_this.codeNo=_this.$route.query.codeNo;
+					if(jxjyCity!="" && jxjyCity!=null && jxjyCity!=undefined){
+		      			var params={'codeNo':_this.codeNo,'className':_this.className,'pages':_this.pages,'pageSize':_this.pageSize,'area':jxjyCity.split('?')[1]};
+					}else{
+						var params={'area':_this.$store.state.chooseCity,'codeNo':_this.codeNo,'className':_this.className,'pages':_this.pages,'pageSize':_this.pageSize};
+					};
+					_this.isFirstToPage=false;
+				}else{
+					if(jxjyCity!="" && jxjyCity!=null && jxjyCity!=undefined){
+		      			var params={'codeNo':_this.codeNo,'className':_this.className,'pages':_this.pages,'pageSize':_this.pageSize,'area':jxjyCity.split('?')[1]};
+					}else{
+						var params={'area':_this.$store.state.chooseCity,'codeNo':_this.codeNo,'className':_this.className,'pages':_this.pages,'pageSize':_this.pageSize};
+					};
+					_this.isFirstToPage=false;
+				}
+	      		
+				axios.post('/class/toClassCenter.html',params,config)
+				.then(function(res){
+					_this.dataMsg=res.data.list;
+					// 判断是否有数据
+					_this.isHaveData=(_this.dataMsg.length==0)?false:true;
+
+					// 如果页码乘以每页数量大于总数据数量，停止滚动加载数据
+					_this.canGetData=(_this.pages*_this.pageSize>res.data.num)?false:true;
+					_this.pages++;
+					_this.openIndicatorWithText('close');
+					$('body').scrollTop(0);
+
+					_this.firstGetData=true;
+				});
+			},
+			// 滚动事件
+			scrollData(){
+				var _this=this;
+				window.addEventListener('scroll',function(){
+					if((document.body.scrollTop + window.innerHeight+parseInt(300)  >=document.body.offsetHeight)&&_this.canGetData && _this.beforeLeave ){
+						_this.loadMore();
+					}
+				});
+			},
+			// 加载更多
+			loadMore(){
+				var _this=this;
+
+				_this.canGetData=false;
+				_this.openIndicatorWithText('open');
+
+				var jxjyCity=sessionStorage.getItem('jxjySetChooseCity');
+				if(jxjyCity!="" && jxjyCity!=null && jxjyCity!=undefined){
+					var params={'area':jxjyCity.split('?')[1],'codeNo':_this.codeNo,'className':_this.className,'pages':_this.pages,'pageSize':_this.pageSize};
+				}else{
+					var params={'area':_this.$store.state.chooseCity,'codeNo':_this.codeNo,'className':_this.className,'pages':_this.pages,'pageSize':_this.pageSize};
+				};
+				axios.post('/class/toClassCenter.html',params,config)
+				.then(function(res){
+
+					_this.dataMsg=_this.dataMsg.concat(res.data.list);
+					// 如果页码乘以每页数量大于总数据数量，停止滚动加载数据
+					_this.canGetData=(_this.pages*_this.pageSize>res.data.num)?false:true;
+					_this.pages++;
+					_this.openIndicatorWithText('close');
+				})
+			},
+			// 隐藏专业下拉框
+			hideMajorBox(){
+				$('.major_list').removeClass('hover');
+				$('.choose_idea_box td.hover').removeClass('hover').children().children('.arrow_logo.hover').removeClass('hover').siblings('.arrow_logo').addClass('hover');
+				$('.bg_opacity').fadeOut();
+			},
+			// 搜索框查询
+			searchBtn(){
+				var _this=this;
+				_this.className=_this.$refs.searchBox.value;
+				_this.getData();
+			},
+			// 专业切换
+			majorToggle(e){
+				var a=e.target||e.srcElement;
+				$(a).addClass("hover").siblings("li.hover").removeClass('hover');
+				this.majorNo=$(a).attr('name');
+
+				this.ensureBtn();
+			},
+			// 大类点击效果
+			clickMajor(e){
+				var a=e.currentTarget;
+				$(a).addClass('hover').siblings('td.hover').removeClass('hover');
+				// 箭头切换
+				$(a).children().children('.arrow_top').addClass('hover').siblings('.arrow_down').removeClass('hover').parent('p').parent('td').siblings('td').children().children('.arrow_top').removeClass('hover').siblings('.arrow_down').addClass('hover');
+
+				$('.major_list').addClass('hover').children().children('li.hover').removeClass('hover');
+				this.majorNo='';
+				// 显示透明背景
+				$('.bg_opacity').fadeIn();
+				// 获取存储在name属性里的大类编号
+				var getName=$(a).attr('name');
+				var idxNum=$(a).children('.idx_num').val();
+				this.getMajor(getName);
+			},
+			// 透明背景点击让选择框消失
+			opacityClick(){
+				$('.bg_opacity').fadeOut();
+				$('.major_list').removeClass('hover');
+				$('.choose_idea_box td.hover').removeClass('hover').children().children('.arrow_top').removeClass('hover').siblings('.arrow_down').addClass('hover');
+			},
+			// 专业分类查询
+			ensureBtn(){
+				var _this=this;
+				$('.major_list').removeClass('hover');
+				$('.choose_idea_box td.hover').removeClass('hover').children().children('.arrow_top').removeClass('hover').siblings('.arrow_down').addClass('hover');
+
+				_this.codeNo=_this.majorNo;
+				_this.getData();
+				// 隐藏透明背景
+				$('.bg_opacity').fadeOut();
+			},
+			// 获取专业信息
+			getMajorMsg(){
+				var _this=this;
+				var params={'parent':_this.codeNo};
+				axios.post('/class/toCode.html',params,config)
+				.then(function(res){
+					_this.getMajorData=res.data.list;
+				});
+			},
+			// 获取班级大类分类信息
+			getType(){
+				var _this=this;
+				// 默认大类  07
+				var params={'parent':'07'};
+				axios.post('/class/toCode.html',params,config)
+				.then(function(res){
+					_this.getTypeData=res.data.list;
+				})
+			},
+			// 获取班级大类下专业信息
+			getMajor(getCode){
+				var _this=this;
+				var params={'parent':getCode};
+				axios.post('/class/toCode.html',params,config)
+				.then(function(res){
+					_this.getMajorData=res.data.list;
+				});
+			},
+			// 设置是否显示头部返回按钮
+			setHeaderBackBtn(){
+				this.$store.commit('showHeaderBack',false);
+			},
+			// 设置底部导航状态
+			setNavBottom(){
+				this.$store.commit('setNavOnBottomStatus',['0','1','0','0','0']);
+			},
+			// 加载更多图片弹框插件
+	      	openIndicatorWithText(a) {   
+	      		if(a == "open"){
+	      			Indicator.open('加载中...');
+	      		}else if(a == "close"){
+	      			Indicator.close();
+	      		}
+	      	}
+		},
+		beforeDestroy() {
+	      	Indicator.close();
+	      	this.openIndicatorWithText('close');
+	      	this.beforeLeave=false;
+	    },
+	}
+</script>
+<style scoped>
+	.warn_text{font-size: 0.26rem;color:#EF856C;position: absolute;height:20px;left:0;top:50%;margin-top: -10px;}
+	.btm_box{position: relative;}
+    .jxjyw{padding-bottom: 50px;margin-top: 210px;background:#eee;}
+    .z_index_box{position: relative;background:#fff;top:-10px;z-index: 2}
+    .top_fix{position: fixed;top:50px;left:0;right:0;z-index: 9999}
+    .top_fix>img{z-index: 2}
+    .load_more{text-align: center;padding-bottom: 150px;}
+	/*筛选框*/
+	.course{position: relative;z-index: 0}
+	.choose_idea{position: relative;}
+	.choose_idea table{border-collapse: collapse;border:0;}
+	.choose_idea_box{width:100%;}
+	.choose_idea_box tr td{border-top:1px solid #c8c5c4;border-bottom:1px solid #c8c5c4;text-align: center;padding:2px 0;}
+	.choose_idea_box tr td p{height:31px;line-height: 31px;border-right:1px solid #c8c5c4;}
+	.choose_idea_box tr td:last-child p{border-right:0 !important;}
+	.choose_idea_box tr td.hover{border-bottom: 0}
+	.arrow_logo{margin-left:2px;font-size: 0.2rem;display: none}
+	.arrow_logo.hover{display: inline;}
+	.arrow_top{position: relative;top:-5px;}
+	.major_list{display:none;position: absolute;top:37px;left:0;width:100%;background: #fff}
+	.major_list.hover{display:block;}
+	.major_list ul li{width:100%;float:left;padding:6px 0 6px 10px;text-align: left;}
+	.major_list ul li.hover{color:#e4393c;}
+	.major_list ul{padding-bottom: 10px;max-height: 200px;overflow-y: scroll;}
+	.bg_opacity{display:none;position: fixed;top:51px;left:0;right:0;bottom:0;background:#000;opacity:0.7;}
+	.btn_box1{border-bottom:1px solid #ddd;text-align: center;}
+	.btn_box1 img{margin:10px 0;}
+	.choose_idea_box td.hover span{color:#e4303c;}
+
+
+	.ss{padding-bottom:35px; width:100%;margin-bottom: 10px; height:30px; border-bottom:1px solid #f8f8f8;padding-top:10px;}
+    #text{width:300px; height:30px; margin:0px; color:#555555;border:1px solid #ccc; float:left; line-height:30px; border-radius:15px;-moz-border-radius: 15px;
+	-webkit-border-radius: 15px; padding-left:5px;background:url(../../../static/images/guancn-55.png) no-repeat 6px center;padding-left: 30px;background-size:0.28rem;font-size: 0.28rem}
+    .ss01{display:block;margin:5px auto; width:300px; height:22px;position: relative;}
+    .ss01 p{position: absolute;right:0;top:0;width:65px;height:30px;line-height: 30px;background:#17bbe2;color:#fff;text-align: center;border-bottom-right-radius: 15px;-webkit-border-bottom-right-radius: 15px;-moz-border-bottom-right-radius: 15px;border-top-right-radius: 15px;-webkit-border-top-right-radius: 15px;-moz-border-top-right-radius: 15px;font-size: 0.34rem}
+
+    .course ul{width:100%;padding:0 5px;}
+    .course li{padding:5px 3px;border:1px solid #EEEEEE;border-radius: 5px;-webkit-border-radius: 5px;-o-border-radius: 5px;border-bottom: 2px solid #5FB2D2;margin-top:5px;background:#fff;}
+	.course_title{font-size: 0.34rem;font-weight: 300;color: #000;}
+	.class_list td p{font-size: 0.28rem;color:#939192;}
+	.class_list td p.t_box{position:relative;}
+	.class_list td p.t_box span{color: #939192;}
+	.class_list td p.t_box .price{font-size: 0.32rem;color: #D4412A;position: absolute;top:-2px;right:0;}
+	.look_detail{color:#3F9ED1;font-size:0.9rem;margin-top: 4px;float: left}
+	.study_time{background:url(../../../static/images/sjz_03.png) no-repeat 1px center;padding-left: 0.34rem;background-size: 0.26rem !important;-webkit-background-size: 0.26rem !important;-moz-background-size: 0.26rem !important;-o-background-size: 0.26rem !important;}
+	.study_time span{color:#939192;margin-top: 1px;font-size: 0.28rem}
+	.study_time img{margin-right: 3px}
+
+	.extra_free{position:absolute;right:-9px;top:0;background:#EB681A;padding:0 5px;height: 0.3rem;line-height: 0.33rem;}
+	.extra_free span{color:#fff;font-size:0.28rem}
+	.top_trangle{position:absolute;width:0;height:0;border-right:4px solid transparent;border-bottom:4px solid #EB681A;top:-4px;right:0;}
+</style>
